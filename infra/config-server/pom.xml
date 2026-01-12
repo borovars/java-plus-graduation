@@ -44,6 +44,13 @@
                     <mainClass>config.ConfigServer</mainClass>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>ru.practicum.config.ConfigServer</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
