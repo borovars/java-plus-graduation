@@ -32,6 +32,7 @@ services:
       - ./docker/postgres/stats.sql:/docker-entrypoint-initdb.d/init.sql
 
 
+
       #ewm-service:
       #build: ewm-service
     #image: ewm-service
