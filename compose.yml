@@ -68,4 +68,4 @@ services:
       interval: 5s
       retries: 10
     volumes:
-      - ./docker/postgres/main-service.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/postgres/main.sql:/docker-entrypoint-initdb.d/init.sql
