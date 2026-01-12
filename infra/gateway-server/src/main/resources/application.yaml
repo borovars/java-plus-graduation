@@ -1,6 +1,6 @@
 spring:
   application:
-    name: main-service
+    name: gateway
   config:
     import: configserver:http://localhost:8888
   cloud:
@@ -8,13 +8,12 @@ spring:
       discovery:
         enabled: true
         serviceId: config-server
+        fail-fast: true
+        retry:
+          use-random-policy: true
+          max-interval: 6000
 
 eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
-  instance:
-    prefer-ip-address: true
-
-server:
-  port: 8081

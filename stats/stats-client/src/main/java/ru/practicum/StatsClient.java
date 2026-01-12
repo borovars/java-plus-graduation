@@ -1,8 +1,8 @@
 package ru.practicum;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -17,15 +17,22 @@ import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class StatsClient {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     protected final RestTemplate rest;
 
-    @Value("${stats-server.url:${STATS_SERVER_URL:http://stats-server:9090}}")
-    private String statsServerUrl;
+    private final DiscoveryClient discoveryClient;
+
+    private final String statsServerUrl;
+
+
+    public StatsClient(RestTemplate rest, DiscoveryClient discoveryClient) {
+        this.rest = rest;
+        this.discoveryClient = discoveryClient;
+        this.statsServerUrl = getServiceUri("STATS-SERVER");
+    }
 
     public ResponseEntity<HitDto> postHit(HitDto endpointHitDto) {
         String url = statsServerUrl + "/hit";
@@ -55,5 +62,13 @@ public class StatsClient {
                 StatsDto[].class
         );
         return Arrays.asList(response.getBody());
+    }
+
+    public String getServiceUri(String serviceId) {
+        List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
+        if (instances == null || instances.isEmpty()) {
+            return null;
+        }
+        return instances.get(0).getUri().toString();
     }
 }
