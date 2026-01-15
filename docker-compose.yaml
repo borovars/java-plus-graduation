@@ -1,61 +1,24 @@
 services:
- # stats-server:
-  #   build: ewm-stats/server
-  # image: server
-  # container_name: stats-server
-  # ports:
-  #   - "9090:9090"
-  # depends_on:
-  #   - stat-db
-  # environment:
-  #   - SPRING_DATASOURCE_URL=jdbc:postgresql://stat-db:5432/ewm-stats
-  #   - SPRING_DATASOURCE_USERNAME=ewm-stats
-  #   - SPRING_DATASOURCE_PASSWORD=ewm-stats
-  #   - TZ=UTC
-  #   - JAVA_TOOL_OPTIONS=-Duser.timezone=UTC
-
   stat-db:
     image: postgres:16.1
     container_name: stat-postgres
     ports:
       - "6541:5432"
     environment:
-      - POSTGRES_PASSWORD=ewm-stats
-      - POSTGRES_USER=ewm-stats
-      - POSTGRES_DB=ewm-stats
+      POSTGRES_USER: ewm-stats
+      POSTGRES_PASSWORD: ewm-stats
+      POSTGRES_DB: ewm-stats
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
       interval: 5s
+      timeout: 5s
       retries: 10
     command: >
       postgres
       -c log_statement=all
       -c log_destination=stderr
     volumes:
-      - ./docker/postgres/stats.sql:/docker-entrypoint-initdb.d/init.sql
-
-
-
-      #ewm-service:
-      #build: ewm-service
-    #image: ewm-service
-    # container_name: ewm-service
-      # ports:
-    #    - "8080:8080"
-      #  depends_on:
-    #    - ewm-db
-      #  environment:
-      #    - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm-db
-      #    - SPRING_DATASOURCE_USERNAME=ewm-db
-      #   - SPRING_DATASOURCE_PASSWORD=ewm-db
-    #   - STATS_SERVER_URL=http://stats-server:9090
-    #   - JAVA_TOOL_OPTIONS=-Duser.timezone=UTC
-      # healthcheck:
-      #    test: "curl --fail --silent localhost:8080/actuator/health | grep UP || exit 1"
-      #    timeout: 5s
-      #    interval: 5s
-  #    retries: 5
+      - ./docker/postgres/stats.sql:/docker-entrypoint-initdb.d/01-stats.sql:ro
 
   ewm-db:
     image: postgres:16.1
@@ -63,17 +26,17 @@ services:
     ports:
       - "6543:5432"
     environment:
-      - POSTGRES_PASSWORD=ewm-db
-      - POSTGRES_USER=ewm-db
-      - POSTGRES_DB=ewm-db
+      POSTGRES_USER: ewm-db
+      POSTGRES_PASSWORD: ewm-db
+      POSTGRES_DB: ewm-db
     healthcheck:
       test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
       interval: 5s
+      timeout: 5s
       retries: 10
     command: >
       postgres
       -c log_statement=all
       -c log_destination=stderr
     volumes:
-      - ./docker/postgres/main.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/postgres/main.sql:/docker-entrypoint-initdb.d/01-main.sql:ro
