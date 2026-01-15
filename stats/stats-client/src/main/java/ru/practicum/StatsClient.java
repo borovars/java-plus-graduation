@@ -67,7 +67,7 @@ public class StatsClient {
     public String getServiceUri(String serviceId) {
         List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
         if (instances == null || instances.isEmpty()) {
-            return null;
+            return "http://localhost:9091";
         }
         return instances.get(0).getUri().toString();
     }
