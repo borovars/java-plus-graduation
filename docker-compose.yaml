@@ -13,12 +13,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    command: >
-      postgres
-      -c log_statement=all
-      -c log_destination=stderr
-    volumes:
-      - ./docker/postgres/stats.sql:/docker-entrypoint-initdb.d/01-stats.sql:ro
 
   ewm-db:
     image: postgres:16.1
@@ -34,9 +28,3 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    command: >
-      postgres
-      -c log_statement=all
-      -c log_destination=stderr
-    volumes:
-      - ./docker/postgres/main.sql:/docker-entrypoint-initdb.d/01-main.sql:ro
