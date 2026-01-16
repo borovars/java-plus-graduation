@@ -1,0 +1,75 @@
+package ru.practicum;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.http.*;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import ru.practicum.dto.HitDto;
+import ru.practicum.dto.StatsDto;
+
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
+
+@Slf4j
+@Service
+public class StatsClient {
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    protected final RestTemplate rest;
+
+    private final DiscoveryClient discoveryClient;
+
+    private final String statsServerUrl;
+
+
+    public StatsClient(RestTemplate rest, DiscoveryClient discoveryClient, StatsClientProperties properties) {
+        this.rest = rest;
+        this.discoveryClient = discoveryClient;
+        String serviceName = properties.getServiceName();
+        this.statsServerUrl = getServiceUri(serviceName);
+    }
+
+    public ResponseEntity<HitDto> postHit(HitDto endpointHitDto) {
+        String url = statsServerUrl + "/hit";
+        return rest.postForEntity(url, endpointHitDto, HitDto.class);
+    }
+
+    public List<StatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
+        String startStr = start.format(FORMATTER);
+        String endStr = end.format(FORMATTER);
+
+        StringBuilder urlBuilder = new StringBuilder(statsServerUrl)
+                .append("/stats?start=").append(startStr)
+                .append("&end=").append(endStr)
+                .append("&unique=").append(unique);
+
+        if (uris != null && !uris.isEmpty()) {
+            for (String uri : uris) {
+                urlBuilder.append("&uris=").append(uri);
+            }
+        }
+
+        String url = urlBuilder.toString();
+        ResponseEntity<StatsDto[]> response = rest.exchange(
+                url,
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                StatsDto[].class
+        );
+        return Arrays.asList(response.getBody());
+    }
+
+    public String getServiceUri(String serviceId) {
+        List<ServiceInstance> instances = discoveryClient.getInstances(serviceId);
+        if (instances == null || instances.isEmpty()) {
+            return "http://localhost:9091";
+        }
+        return instances.get(0).getUri().toString();
+    }
+}
