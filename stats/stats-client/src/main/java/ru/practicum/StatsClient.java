@@ -28,10 +28,11 @@ public class StatsClient {
     private final String statsServerUrl;
 
 
-    public StatsClient(RestTemplate rest, DiscoveryClient discoveryClient) {
+    public StatsClient(RestTemplate rest, DiscoveryClient discoveryClient, StatsClientProperties properties) {
         this.rest = rest;
         this.discoveryClient = discoveryClient;
-        this.statsServerUrl = getServiceUri("STATS-SERVER");
+        String serviceName = properties.getServiceName();
+        this.statsServerUrl = getServiceUri(serviceName);
     }
 
     public ResponseEntity<HitDto> postHit(HitDto endpointHitDto) {

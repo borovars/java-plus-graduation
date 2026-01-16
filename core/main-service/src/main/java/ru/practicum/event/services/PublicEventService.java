@@ -46,12 +46,15 @@ public class PublicEventService {
                 onlyAvailable, PageRequest.of(page, size));
 
         try {
+            log.debug("Вызов statsClient.postHit с параметрами {}, {}, {}, {}", "main-service",
+                    request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
             statsClient.postHit(HitDto.builder()
                     .app("main-service")
                     .uri(request.getRequestURI())
                     .ip(request.getRemoteAddr())
                     .timestamp(LocalDateTime.now())
                     .build());
+            log.debug("Вызов statsClient.postHit выполнен успешно");
         } catch (Exception e) {
             log.info("Не удалось отправить запрос о сохранении статистики " + e.getMessage());
         }
@@ -83,7 +86,9 @@ public class PublicEventService {
                     .timestamp(LocalDateTime.now())
                     .build();
 
+            log.debug("Вызов statsClient.postHit с параметрами {}", hit);
             statsClient.postHit(hit);
+            log.debug("Вызов statsClient.postHit выполнен успешно");
         } catch (Exception e) {
             log.error("Не удалось отправить запрос о сохранении на сервер статистики", e);
         }
@@ -113,7 +118,9 @@ public class PublicEventService {
         try {
             log.info("Получение статистики по времени для URI: {} c {} по {}", uris, startTime, endTime);
 
+            log.debug("Вызов StatsClient.getStats c параметрами {},{},{},{}", startTime, endTime, uris, true);
             List<StatsDto> stats = statsClient.getStats(startTime, endTime, uris, true);
+            log.debug("StatsClient вернул {}", stats);
             if (stats == null || stats.isEmpty()) {
                 log.info("Получен пустой список от сервиса статистики");
                 return Collections.emptyMap();

@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:6543/ewm-db
-    username: ewm-db
-    password: ewm-db
+    url: jdbc:postgresql://localhost:6543/main-db
+    username: main-db
+    password: main-db
   jpa:
     hibernate:
       ddl-auto: none
@@ -27,3 +27,7 @@ management:
       base-path: /actuator
       exposure:
         include: health
+
+stats:
+  client:
+    service-name: STATS-SERVER

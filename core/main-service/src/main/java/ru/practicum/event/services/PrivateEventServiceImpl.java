@@ -270,7 +270,9 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         try {
             log.info("Получение статистики по времени для URI: {} c {} по {}", uris, startTime, endTime);
 
+            log.debug("Вызов StatsClient.getStats c параметрами {},{},{},{}", startTime, endTime, uris, true);
             List<StatsDto> stats = statsClient.getStats(startTime, endTime, uris, true);
+            log.debug("StatsClient вернул {}", stats);
             if (stats == null || stats.isEmpty()) {
                 log.info("Сервис статистики вернул пустой список");
                 return Collections.emptyMap();

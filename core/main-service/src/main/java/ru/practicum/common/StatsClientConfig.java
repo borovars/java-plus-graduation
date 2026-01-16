@@ -1,6 +1,7 @@
-package ru.practicum;
+package ru.practicum.common;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -12,4 +13,5 @@ public class StatsClientConfig {
     public RestTemplate restTemplate() {
         return new RestTemplateBuilder().build();
     }
+
 }

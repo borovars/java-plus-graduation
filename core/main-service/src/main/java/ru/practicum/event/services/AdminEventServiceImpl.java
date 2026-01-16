@@ -10,7 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.StatsClient;
 import ru.practicum.category.Category;
 import ru.practicum.category.service.CategoryService;
 import ru.practicum.common.exception.BadArgumentsException;
@@ -37,8 +36,6 @@ public class AdminEventServiceImpl implements AdminEventService {
     private final LocationService locationService;
 
     private final EventRepository eventRepository;
-
-    private final StatsClient statsClient;
 
     @Transactional
     @Override
