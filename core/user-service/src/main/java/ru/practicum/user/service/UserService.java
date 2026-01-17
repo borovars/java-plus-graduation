@@ -38,5 +38,5 @@ public interface UserService {
      */
     void deleteUser(long userId) throws NotFoundException;
 
-    User findById(Long id) throws NotFoundException;
+    UserDto findById(Long id) throws NotFoundException;
 }

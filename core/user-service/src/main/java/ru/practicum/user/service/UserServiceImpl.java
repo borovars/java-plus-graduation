@@ -114,8 +114,8 @@ public class UserServiceImpl implements UserService {
         log.info("Передано корректное значение поты: {}", user.getEmail());
     }
 
-    public User findById(Long id) throws NotFoundException {
-        return userRepository.findById(id).orElseThrow(
-                () -> new NotFoundException("Пользователь с id " + id + " не найден"));
+    public UserDto findById(Long id) throws NotFoundException {
+        return UserMapper.mapToUserDto(userRepository.findById(id).orElseThrow(
+                () -> new NotFoundException("Пользователь с id " + id + " не найден")));
     }
 }
