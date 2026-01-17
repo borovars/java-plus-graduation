@@ -28,3 +28,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  user-db:
+    image: postgres:16.1
+    container_name: user-db
+    ports:
+      - "6542:5432"
+    environment:
+      POSTGRES_USER: user-db
+      POSTGRES_PASSWORD: user-db
+      POSTGRES_DB: user-db
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      interval: 5s
+      timeout: 5s
+      retries: 10
