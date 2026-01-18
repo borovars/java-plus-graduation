@@ -10,8 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.common.exception.NotFoundException;
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
+import ru.practicum.feign.event.dto.EventFullDto;
+import ru.practicum.feign.event.dto.EventShortDto;
 import ru.practicum.event.services.PublicEventService;
 
 import java.time.LocalDateTime;

@@ -4,11 +4,11 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import ru.practicum.category.Category;
 import ru.practicum.category.dto.CategoryDto;
-import ru.practicum.event.dto.EventCreateDto;
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.dto.EventUpdateDto;
-import ru.practicum.event.enums.States;
+import ru.practicum.feign.event.dto.EventCreateDto;
+import ru.practicum.feign.event.dto.EventFullDto;
+import ru.practicum.feign.event.dto.EventShortDto;
+import ru.practicum.feign.event.dto.EventUpdateDto;
+import ru.practicum.feign.event.enums.States;
 import ru.practicum.location.LocationMapper;
 import ru.practicum.user.UserMapper;
 

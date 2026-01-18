@@ -1,8 +1,8 @@
 package ru.practicum.category;
 
 import lombok.experimental.UtilityClass;
-import ru.practicum.category.dto.CategoryDto;
-import ru.practicum.category.dto.NewCategoryDto;
+import ru.practicum.feign.category.dto.CategoryDto;
+import ru.practicum.feign.category.dto.NewCategoryDto;
 
 import java.util.List;
 

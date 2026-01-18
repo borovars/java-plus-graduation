@@ -7,22 +7,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.category.Category;
-import ru.practicum.category.service.CategoryService;
 import ru.practicum.common.exception.BadArgumentsException;
 import ru.practicum.common.exception.ConflictException;
 import ru.practicum.common.exception.NotFoundException;
 import ru.practicum.event.Event;
 import ru.practicum.event.EventMapper;
 import ru.practicum.event.EventRepository;
-import ru.practicum.event.dto.EventAdminUpdateDto;
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.enums.StateActionsAdmin;
-import ru.practicum.event.enums.States;
+import ru.practicum.feign.category.CategoryFeignClient;
+import ru.practicum.feign.category.dto.CategoryDto;
+import ru.practicum.feign.event.dto.EventAdminUpdateDto;
+import ru.practicum.feign.event.dto.EventFullDto;
+import ru.practicum.feign.event.enums.StateActionsAdmin;
+import ru.practicum.feign.event.enums.States;
 import ru.practicum.event.services.interfaces.AdminEventService;
-import ru.practicum.location.Location;
-import ru.practicum.location.LocationMapper;
-import ru.practicum.location.LocationService;
+import ru.practicum.feign.location.LocationFeignClient;
+import ru.practicum.feign.location.dto.LocationDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,7 +32,7 @@ import java.util.List;
 public class AdminEventServiceImpl implements AdminEventService {
 
     private final CategoryFeignClient categoryFeignClient;
-    private final LocationService locationService;
+    private final LocationFeignClient locationFeignClient;
 
     private final EventRepository eventRepository;
 
@@ -120,8 +119,8 @@ public class AdminEventServiceImpl implements AdminEventService {
         }
 
         if (updateRequest.getCategory() != null) {
-            Category category = categoryService.findById(updateRequest.getCategory());
-            event.setCategory(category);
+            CategoryDto category = categoryFeignClient.findCategoryById(updateRequest.getCategory());
+            event.setCategory(category.getId());
         }
 
         if (updateRequest.getDescription() != null) {
@@ -149,9 +148,8 @@ public class AdminEventServiceImpl implements AdminEventService {
         }
 
         if (updateRequest.getLocation() != null) {
-            Location newLocation = LocationMapper.mapToLocation(updateRequest.getLocation());
-            locationService.save(newLocation);
-            event.setLocation(newLocation);
+            Long locationId = locationFeignClient.save(updateRequest.getLocation());
+            event.setLocation(locationId);
         }
     }
 }

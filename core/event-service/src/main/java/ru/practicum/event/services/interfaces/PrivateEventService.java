@@ -4,10 +4,10 @@ package ru.practicum.event.services.interfaces;
 import org.springframework.data.domain.Page;
 import ru.practicum.common.exception.ConflictException;
 import ru.practicum.common.exception.NotFoundException;
-import ru.practicum.event.dto.EventCreateDto;
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.dto.EventUpdateDto;
+import ru.practicum.feign.event.dto.EventCreateDto;
+import ru.practicum.feign.event.dto.EventFullDto;
+import ru.practicum.feign.event.dto.EventShortDto;
+import ru.practicum.feign.event.dto.EventUpdateDto;
 
 public interface PrivateEventService {
 

@@ -4,9 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Formula;
 import ru.practicum.category.Category;
-import ru.practicum.event.enums.States;
+import ru.practicum.feign.event.enums.States;
 import ru.practicum.location.Location;
-import ru.practicum.user.service.User;
+import ru.practicum.user.User;
 
 import java.time.LocalDateTime;
 
@@ -41,7 +41,7 @@ public class Event {
      */
     @ManyToOne
     @JoinColumn(name = "category_id")
-    private Category category;
+    private Long category;
 
     /**
      * Полное описание
@@ -60,7 +60,7 @@ public class Event {
      */
     @OneToOne
     @JoinColumn(name = "location_id")
-    private Location location;
+    private Long location;
 
     /**
      * Признак оплаты
@@ -103,7 +103,7 @@ public class Event {
      */
     @ManyToOne
     @JoinColumn(name = "initiator_id")
-    private User initiator;
+    private Long initiator;
 
     /**
      * Состояние

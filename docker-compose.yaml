@@ -43,3 +43,48 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  event-db:
+    image: postgres:16.1
+    container_name: event-db
+    ports:
+      - "6543:5432"
+    environment:
+      POSTGRES_USER: event-db
+      POSTGRES_PASSWORD: event-db
+      POSTGRES_DB: event-db
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  category-db:
+    image: postgres:16.1
+    container_name: category-db
+    ports:
+      - "6544:5432"
+    environment:
+      POSTGRES_USER: category-db
+      POSTGRES_PASSWORD: category-db
+      POSTGRES_DB: category-db
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  location-db:
+    image: postgres:16.1
+    container_name: location-db
+    ports:
+      - "6545:5432"
+    environment:
+      POSTGRES_USER: location-db
+      POSTGRES_PASSWORD: location-db
+      POSTGRES_DB: location-db
+    healthcheck:
+      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
+      interval: 5s
+      timeout: 5s
+      retries: 10

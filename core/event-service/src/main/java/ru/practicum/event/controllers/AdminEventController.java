@@ -10,9 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.common.exception.BadArgumentsException;
 import ru.practicum.common.exception.ConflictException;
 import ru.practicum.common.exception.NotFoundException;
-import ru.practicum.event.api.EventFeignClient;
-import ru.practicum.event.dto.EventAdminUpdateDto;
-import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.feign.event.dto.EventAdminUpdateDto;
+import ru.practicum.feign.event.dto.EventFullDto;
 import ru.practicum.event.services.interfaces.AdminEventService;
 
 import java.time.LocalDateTime;
@@ -21,10 +20,11 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/admin/events")
-public class AdminEventController implements EventFeignClient {
+public class AdminEventController {
 
     private final AdminEventService adminEventService;
 
+    @PatchMapping("/{eventId}")
     public EventFullDto updateEventByAdmin(@RequestBody @Valid EventAdminUpdateDto eventAdminUpdateDto,
                                            @PathVariable(name = "eventId") @Positive long eventId)
             throws NotFoundException, BadRequestException, ConflictException {

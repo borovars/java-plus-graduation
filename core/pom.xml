@@ -13,8 +13,9 @@
     <packaging>pom</packaging>
     <modules>
         <module>main-service</module>
-        <module>common-lib</module>
+        <module>interaction-api</module>
         <module>category-service</module>
+        <module>location-service</module>
     </modules>
 
 </project>

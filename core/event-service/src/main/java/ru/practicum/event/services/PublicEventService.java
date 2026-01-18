@@ -15,9 +15,9 @@ import ru.practicum.dto.StatsDto;
 import ru.practicum.event.Event;
 import ru.practicum.event.EventMapper;
 import ru.practicum.event.EventRepository;
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.enums.States;
+import ru.practicum.feign.event.dto.EventFullDto;
+import ru.practicum.feign.event.dto.EventShortDto;
+import ru.practicum.feign.event.enums.States;
 
 import java.time.LocalDateTime;
 import java.util.Collections;

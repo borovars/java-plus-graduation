@@ -66,7 +66,7 @@
         </dependency>
         <dependency>
             <groupId>ru.practicum</groupId>
-            <artifactId>common-lib</artifactId>
+            <artifactId>interaction-api</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
@@ -88,7 +88,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>ru.practicum.user.CategoryApp</mainClass>
+                    <mainClass>ru.practicum.category.CategoryApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>

@@ -18,20 +18,22 @@ import ru.practicum.dto.StatsDto;
 import ru.practicum.event.Event;
 import ru.practicum.event.EventMapper;
 import ru.practicum.event.EventRepository;
-import ru.practicum.event.dto.EventCreateDto;
-import ru.practicum.event.dto.EventFullDto;
-import ru.practicum.event.dto.EventShortDto;
-import ru.practicum.event.dto.EventUpdateDto;
-import ru.practicum.event.enums.StateActions;
-import ru.practicum.event.enums.States;
+import ru.practicum.feign.category.CategoryFeignClient;
+import ru.practicum.feign.category.dto.CategoryDto;
+import ru.practicum.feign.event.dto.EventCreateDto;
+import ru.practicum.feign.event.dto.EventFullDto;
+import ru.practicum.feign.event.dto.EventShortDto;
+import ru.practicum.feign.event.dto.EventUpdateDto;
+import ru.practicum.feign.event.enums.StateActions;
+import ru.practicum.feign.event.enums.States;
 import ru.practicum.event.services.interfaces.PrivateEventService;
+import ru.practicum.feign.location.LocationFeignClient;
+import ru.practicum.feign.location.dto.LocationDto;
 import ru.practicum.location.Location;
 import ru.practicum.location.LocationMapper;
 import ru.practicum.location.LocationService;
-import ru.practicum.user.User;
-import ru.practicum.user.UserService;
-import ru.practicum.user.api.UserFeignClient;
-import ru.practicum.user.api.dto.UserDto;
+import ru.practicum.feign.user.UserFeignClient;
+import ru.practicum.feign.user.dto.UserDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -46,8 +48,8 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final UserFeignClient userFeignClient;
-    private final CategoryService categoryService;
-    private final LocationService locationService;
+    private final CategoryFeignClient categoryFeignClient;
+    private final LocationFeignClient locationFeignClient;
     private final StatsClient statsClient;
 
     private final EventRepository eventRepository;
@@ -88,21 +90,19 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         UserDto user = userFeignClient.findByUserId(userId);
         log.info("Передан идентификатор инициатора: {}", user.getId());
 
-        Category category = categoryService.findById(dto.getCategory());
+        CategoryDto category = categoryFeignClient.findCategoryById(dto.getCategory());
         log.info("Передан идентификатор категории: {}", category.getId());
 
         Event event = EventMapper.mapToEvent(dto);
-        event.setCategory(category);
+        event.setCategory(category.getId());
 
         if (dto.getLocation() != null) {
-            Location location = LocationMapper.mapToLocation(dto.getLocation());
-            if (location != null) {
-                locationService.save(location);
-                event.setLocation(location);
-            }
+            LocationDto location = dto.getLocation();
+            Long locationId = locationFeignClient.save(location);
+            event.setLocation(locationId);
         }
 
-        event.setInitiator(user);
+        event.setInitiator(user.getId());
         log.info("Несохраненная модель преобразована");
 
         log.info("Валидация несохраненной модели");
@@ -133,7 +133,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
         log.info("Передан идентификатор события: {}", event.getId());
 
-        if (!user.getId().equals(event.getInitiator().getId())) {
+        if (!user.getId().equals(event.getInitiator())) {
             throw new ConflictException(
                     "User with id=" + user.getId() + " is not initiator of event with id=" + event.getId());
         }
@@ -159,7 +159,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
                 .orElseThrow(() -> new NotFoundException("User with id=" + eventId + " was not found"));
         log.info("Передан идентификатор обновляемого события: {}", event.getId());
 
-        if (!event.getInitiator().getId().equals(userDto.getId())) {
+        if (!event.getInitiator().equals(userDto.getId())) {
             throw new ConflictException(
                     "User with id=" + userDto.getId() + " is not initiator of event with id=" + event.getId());
         }
