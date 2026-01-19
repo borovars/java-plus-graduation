@@ -13,10 +13,10 @@ import ru.practicum.feign.event.dto.EventFullDto;
 import ru.practicum.feign.event.dto.EventShortDto;
 import ru.practicum.feign.event.dto.EventUpdateDto;
 import ru.practicum.event.services.interfaces.PrivateEventService;
-import ru.practicum.request.RequestService;
-import ru.practicum.request.dto.RequestGetDto;
-import ru.practicum.request.dto.RequestsChangeStatusRequestDto;
-import ru.practicum.request.dto.RequestsChangeStatusResponseDto;
+import ru.practicum.feign.request.RequestFeignClient;
+import ru.practicum.feign.request.dto.RequestGetDto;
+import ru.practicum.feign.request.dto.RequestsChangeStatusRequestDto;
+import ru.practicum.feign.request.dto.RequestsChangeStatusResponseDto;
 
 import java.util.Collection;
 
@@ -29,7 +29,7 @@ import java.util.Collection;
 public class PrivateEventController {
 
     private final PrivateEventService privateEventService;
-    private final RequestService requestService;
+    private final RequestFeignClient requestFeignClient;
 
     /**
      * Получение событий, добавленных текущим пользователем
@@ -113,7 +113,7 @@ public class PrivateEventController {
             @PathVariable(name = "userId") long userId,
             @PathVariable(name = "eventId") long eventId
     ) throws ConflictException, NotFoundException {
-        return requestService.getRequestsByEventId(userId, eventId);
+        return requestFeignClient.getRequestsByEventId(userId, eventId);
     }
 
     /**
@@ -131,6 +131,6 @@ public class PrivateEventController {
             @PathVariable(name = "eventId") long eventId,
             @RequestBody @Valid RequestsChangeStatusRequestDto dto
     ) throws ConflictException, NotFoundException {
-        return requestService.requestsChangeStatus(userId, eventId, dto);
+        return requestFeignClient.changeRequestsStatus(userId, eventId, dto);
     }
 }

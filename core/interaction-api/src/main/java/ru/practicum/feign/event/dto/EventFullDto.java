@@ -4,10 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.feign.event.enums.States;
-import ru.practicum.location.LocationDto;
-import ru.practicum.feign.user.dto.UserDto;
 
 @Data
 @AllArgsConstructor
@@ -17,13 +14,13 @@ public class EventFullDto {
 
     private Long id;
     private String annotation;
-    private CategoryDto category;
+    private Long category;
     private Long confirmedRequests;
     private String createdOn;
     private String description;
     private String eventDate;
-    private UserDto initiator;
-    private LocationDto location;
+    private Long initiator;
+    private Long location;
     private Boolean paid;
     private Integer participantLimit;
     private String publishedOn;

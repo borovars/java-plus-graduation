@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.StatsClient;
 import ru.practicum.common.exception.NotFoundException;
 import ru.practicum.dto.HitDto;
 import ru.practicum.dto.StatsDto;
@@ -18,6 +17,7 @@ import ru.practicum.event.EventRepository;
 import ru.practicum.feign.event.dto.EventFullDto;
 import ru.practicum.feign.event.dto.EventShortDto;
 import ru.practicum.feign.event.enums.States;
+import ru.practicum.feign.stats.StatsFeignClient;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 public class PublicEventService {
 
     private final EventRepository eventRepository;
-    private final StatsClient statsClient;
+    private final StatsFeignClient statsFeignClient;
 
     @Transactional(readOnly = true)
     public Page<EventShortDto> getEventsWithFilters(String text, List<Long> categories, Boolean paid,
@@ -51,7 +51,7 @@ public class PublicEventService {
         try {
             log.debug("Вызов statsClient.postHit с параметрами {}, {}, {}, {}", "main-service",
                     request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
-            statsClient.postHit(HitDto.builder()
+            statsFeignClient.postHit(HitDto.builder()
                     .app("main-service")
                     .uri(request.getRequestURI())
                     .ip(request.getRemoteAddr())
@@ -90,7 +90,7 @@ public class PublicEventService {
                     .build();
 
             log.debug("Вызов statsClient.postHit с параметрами {}", hit);
-            statsClient.postHit(hit);
+            statsFeignClient.postHit(hit);
             log.debug("Вызов statsClient.postHit выполнен успешно");
         } catch (Exception e) {
             log.error("Не удалось отправить запрос о сохранении на сервер статистики", e);
@@ -122,7 +122,7 @@ public class PublicEventService {
             log.info("Получение статистики по времени для URI: {} c {} по {}", uris, startTime, endTime);
 
             log.debug("Вызов StatsClient.getStats c параметрами {},{},{},{}", startTime, endTime, uris, true);
-            List<StatsDto> stats = statsClient.getStats(startTime, endTime, uris, true);
+            List<StatsDto> stats = statsFeignClient.getStats(startTime, endTime, uris, true);
             log.debug("StatsClient вернул {}", stats);
             if (stats == null || stats.isEmpty()) {
                 log.info("Получен пустой список от сервиса статистики");

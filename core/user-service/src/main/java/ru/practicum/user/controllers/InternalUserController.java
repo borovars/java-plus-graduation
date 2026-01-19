@@ -19,4 +19,9 @@ public class InternalUserController implements InternalUserContract {
     public UserDto findByUserId(Long userId) throws NotFoundException {
         return userService.findById(userId);
     }
+
+    @Override
+    public boolean existsById(Long userId) throws NotFoundException {
+        return userService.existsById(userId);
+    }
 }

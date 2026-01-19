@@ -121,4 +121,15 @@ public class UserServiceImpl implements UserService {
         return UserMapper.mapToUserDto(userRepository.findById(id).orElseThrow(
                 () -> new NotFoundException("Пользователь с id " + id + " не найден")));
     }
+
+    public boolean existsById(Long userId) throws NotFoundException {
+        log.info("Запрос существования пользователя с id {}", userId);
+
+        if (userRepository.existsById(userId)) {
+            return true;
+        }
+        else {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+    }
 }

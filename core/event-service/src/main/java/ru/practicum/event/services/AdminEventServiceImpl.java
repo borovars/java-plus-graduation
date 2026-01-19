@@ -21,7 +21,6 @@ import ru.practicum.feign.event.enums.StateActionsAdmin;
 import ru.practicum.feign.event.enums.States;
 import ru.practicum.event.services.interfaces.AdminEventService;
 import ru.practicum.feign.location.LocationFeignClient;
-import ru.practicum.feign.location.dto.LocationDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

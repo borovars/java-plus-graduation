@@ -3,11 +3,7 @@ package ru.practicum.event;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Formula;
-import ru.practicum.category.Category;
 import ru.practicum.feign.event.enums.States;
-import ru.practicum.location.Location;
-import ru.practicum.user.User;
-
 import java.time.LocalDateTime;
 
 /**
@@ -39,8 +35,7 @@ public class Event {
     /**
      * Категория
      */
-    @ManyToOne
-    @JoinColumn(name = "category_id")
+    @Column(name = "category_id")
     private Long category;
 
     /**
@@ -58,8 +53,7 @@ public class Event {
     /**
      * Место проведения
      */
-    @OneToOne
-    @JoinColumn(name = "location_id")
+    @Column(name = "location_id")
     private Long location;
 
     /**
@@ -101,8 +95,7 @@ public class Event {
     /**
      * Инициатор
      */
-    @ManyToOne
-    @JoinColumn(name = "initiator_id")
+    @Column(name = "initiator_id")
     private Long initiator;
 
     /**

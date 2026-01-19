@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.feign.event.enums.StateActions;
-import ru.practicum.location.LocationDto;
 
 import java.time.LocalDateTime;
 
@@ -31,7 +30,7 @@ public class EventUpdateDto {
     @Future
     private LocalDateTime eventDate;
 
-    private LocationDto location;
+    private Long location;
 
     private Boolean paid;
 

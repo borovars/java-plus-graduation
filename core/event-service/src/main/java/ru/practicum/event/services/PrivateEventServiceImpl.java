@@ -9,9 +9,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
-import ru.practicum.StatsClient;
-import ru.practicum.category.Category;
-import ru.practicum.category.service.CategoryService;
 import ru.practicum.common.exception.ConflictException;
 import ru.practicum.common.exception.NotFoundException;
 import ru.practicum.dto.StatsDto;
@@ -29,9 +26,7 @@ import ru.practicum.feign.event.enums.States;
 import ru.practicum.event.services.interfaces.PrivateEventService;
 import ru.practicum.feign.location.LocationFeignClient;
 import ru.practicum.feign.location.dto.LocationDto;
-import ru.practicum.location.Location;
-import ru.practicum.location.LocationMapper;
-import ru.practicum.location.LocationService;
+import ru.practicum.feign.stats.StatsFeignClient;
 import ru.practicum.feign.user.UserFeignClient;
 import ru.practicum.feign.user.dto.UserDto;
 
@@ -50,7 +45,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     private final UserFeignClient userFeignClient;
     private final CategoryFeignClient categoryFeignClient;
     private final LocationFeignClient locationFeignClient;
-    private final StatsClient statsClient;
+    private final StatsFeignClient statsFeignClient;
 
     private final EventRepository eventRepository;
 
@@ -58,13 +53,13 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     public Page<EventShortDto> getEventsByUserId(long userId, int from, int size) throws NotFoundException {
         log.info("Запрос списка событий, созданных пользователем на уровне сервиса");
 
-        UserDto userDto = userFeignClient.findByUserId(userId);
-        log.info("Передан идентификатор инициатора событий: {}", userDto.getId());
+        userFeignClient.existsById(userId);
+        log.info("Передан идентификатор инициатора событий: {}", userId);
 
         int page = from / size;
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Direction.ASC, "id"));
 
-        Page<Event> searchResult = eventRepository.findAllByInitiatorId(userDto.getId(), pageRequest);
+        Page<Event> searchResult = eventRepository.findAllByInitiatorId(userId, pageRequest);
         log.info("Из хранилища получена коллекция размером {}", searchResult.getTotalElements());
 
         List<Event> events = searchResult.getContent();
@@ -87,8 +82,8 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     public EventFullDto createEvent(long userId, EventCreateDto dto) throws NotFoundException, ConflictException {
         log.info("Создание события на уровне сервиса");
 
-        UserDto user = userFeignClient.findByUserId(userId);
-        log.info("Передан идентификатор инициатора: {}", user.getId());
+        userFeignClient.existsById(userId);
+        log.info("Передан идентификатор инициатора: {}", userId);
 
         CategoryDto category = categoryFeignClient.findCategoryById(dto.getCategory());
         log.info("Передан идентификатор категории: {}", category.getId());
@@ -102,7 +97,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
             event.setLocation(locationId);
         }
 
-        event.setInitiator(user.getId());
+        event.setInitiator(userId);
         log.info("Несохраненная модель преобразована");
 
         log.info("Валидация несохраненной модели");
@@ -126,16 +121,16 @@ public class PrivateEventServiceImpl implements PrivateEventService {
             ConflictException {
         log.info("Поиск полной информации о событии на уровне сервиса");
 
-        UserDto user = userFeignClient.findByUserId(userId);
-        log.info("Передан идентификатор инициатора события: {}", user.getId());
+        userFeignClient.existsById(userId);
+        log.info("Передан идентификатор инициатора события: {}", userId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
         log.info("Передан идентификатор события: {}", event.getId());
 
-        if (!user.getId().equals(event.getInitiator())) {
+        if (userId != event.getInitiator()) {
             throw new ConflictException(
-                    "User with id=" + user.getId() + " is not initiator of event with id=" + event.getId());
+                    "User with id=" + userId + " is not initiator of event with id=" + event.getId());
         }
 
         EventFullDto result = EventMapper.mapToFullDto(event);
@@ -152,16 +147,16 @@ public class PrivateEventServiceImpl implements PrivateEventService {
             ConflictException {
         log.info("Обновление события на уровне сервиса");
 
-        UserDto userDto = userFeignClient.findByUserId(userId);
-        log.info("Передан идентификатор пользователя: {}", userDto.getId());
+        userFeignClient.existsById(userId);
+        log.info("Передан идентификатор пользователя: {}", userId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("User with id=" + eventId + " was not found"));
         log.info("Передан идентификатор обновляемого события: {}", event.getId());
 
-        if (!event.getInitiator().equals(userDto.getId())) {
+        if (!event.getInitiator().equals(userId)) {
             throw new ConflictException(
-                    "User with id=" + userDto.getId() + " is not initiator of event with id=" + event.getId());
+                    "User with id=" + userId + " is not initiator of event with id=" + event.getId());
         }
 
         if (event.getState() == States.PUBLISHED) {
@@ -268,7 +263,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
             log.info("Получение статистики по времени для URI: {} c {} по {}", uris, startTime, endTime);
 
             log.debug("Вызов StatsClient.getStats c параметрами {},{},{},{}", startTime, endTime, uris, true);
-            List<StatsDto> stats = statsClient.getStats(startTime, endTime, uris, true);
+            List<StatsDto> stats = statsFeignClient.getStats(startTime, endTime, uris, true);
             log.debug("StatsClient вернул {}", stats);
             if (stats == null || stats.isEmpty()) {
                 log.info("Сервис статистики вернул пустой список");

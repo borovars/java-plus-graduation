@@ -2,15 +2,11 @@ package ru.practicum.event;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import ru.practicum.category.Category;
-import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.feign.event.dto.EventCreateDto;
 import ru.practicum.feign.event.dto.EventFullDto;
 import ru.practicum.feign.event.dto.EventShortDto;
 import ru.practicum.feign.event.dto.EventUpdateDto;
 import ru.practicum.feign.event.enums.States;
-import ru.practicum.location.LocationMapper;
-import ru.practicum.user.UserMapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -26,9 +22,9 @@ public class EventMapper {
         return EventShortDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
-                .category(mapToEventCategoryDto(event.getCategory()))
+                .category(event.getCategory())
                 .eventDate(event.getEventDate().format(DATE_TIME_FORMATTER))
-                .initiator(UserMapper.mapToUserShortDto(event.getInitiator()))
+                .initiator(event.getInitiator())
                 .paid(event.getPaid())
                 .title(event.getTitle())
                 .confirmedRequests(event.getConfirmedRequests())
@@ -55,12 +51,12 @@ public class EventMapper {
         return EventFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
-                .category(mapToEventCategoryDto(event.getCategory()))
+                .category(event.getCategory())
                 .createdOn(event.getCreatedOn().format(DATE_TIME_FORMATTER))
                 .description(event.getDescription())
                 .eventDate(event.getEventDate().format(DATE_TIME_FORMATTER))
-                .initiator(UserMapper.mapToUserDto(event.getInitiator()))
-                .location(LocationMapper.mapToLocationDto(event.getLocation()))
+                .initiator(event.getInitiator())
+                .location(event.getLocation())
                 .paid(event.getPaid())
                 .participantLimit(event.getParticipantLimit())
                 .publishedOn(event.getPublishedOn() != null ? event.getPublishedOn().format(DATE_TIME_FORMATTER) : null)
@@ -83,24 +79,10 @@ public class EventMapper {
             event.setEventDate(dto.getEventDate());
         }
         if (dto.hasLocation()) {
-            event.setLocation(LocationMapper.mapToLocation(dto.getLocation()));
+            event.setLocation(dto.getLocation());
         }
         if (dto.hasTitle()) {
             event.setTitle(dto.getTitle());
         }
-    }
-
-    /**
-     * Преобразует категорию события в DTO категории
-     */
-    private CategoryDto mapToEventCategoryDto(Category category) {
-        if (category == null) {
-            return null;
-        }
-
-        return CategoryDto.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .build();
     }
 }

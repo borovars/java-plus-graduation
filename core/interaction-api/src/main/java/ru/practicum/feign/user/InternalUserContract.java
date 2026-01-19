@@ -10,5 +10,8 @@ import ru.practicum.feign.user.dto.UserDto;
 public interface InternalUserContract {
 
     @GetMapping("/{userId}")
-    UserDto findByUserId(@PathVariable @NotNull @Positive Long userId) throws NotFoundException;
+    UserDto findByUserId(@PathVariable(name = "userId") @NotNull @Positive Long userId) throws NotFoundException;
+
+    @GetMapping("/exists/{userId}")
+    boolean existsById(@PathVariable(name = "userId") @NotNull @Positive Long userId) throws NotFoundException;
 }
