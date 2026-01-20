@@ -17,6 +17,7 @@ import ru.practicum.event.EventRepository;
 import ru.practicum.feign.event.dto.EventFullDto;
 import ru.practicum.feign.event.dto.EventShortDto;
 import ru.practicum.feign.event.enums.States;
+import ru.practicum.feign.request.RequestFeignClient;
 import ru.practicum.feign.stats.StatsFeignClient;
 
 import java.time.LocalDateTime;
@@ -33,6 +34,7 @@ public class PublicEventService {
 
     private final EventRepository eventRepository;
     private final StatsFeignClient statsFeignClient;
+    private final RequestFeignClient requestFeignClient;
 
     @Transactional(readOnly = true)
     public Page<EventShortDto> getEventsWithFilters(String text, List<Long> categories, Boolean paid,
@@ -67,6 +69,7 @@ public class PublicEventService {
         return events.map(event -> {
             EventShortDto dto = EventMapper.mapToEventShortDto(event);
             dto.setViews(views.getOrDefault(event.getId(), 0L));
+            dto.setConfirmedRequests(requestFeignClient.findConfirmedRequests(event.getId()));
             return dto;
         });
     }

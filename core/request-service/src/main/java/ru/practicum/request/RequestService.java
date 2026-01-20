@@ -25,4 +25,6 @@ public interface RequestService {
 
     RequestsChangeStatusResponseDto requestsChangeStatus(Long userId, Long eventId, RequestsChangeStatusRequestDto dto)
             throws ConflictException, NotFoundException;
+
+    int getConfirmedRequest(Long eventId);
 }

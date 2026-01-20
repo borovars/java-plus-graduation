@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.common.exception.BadArgumentsException;
 import ru.practicum.common.exception.NotFoundException;
 import ru.practicum.compilation.dto.CompilationDto;
+import ru.practicum.compilation.dto.FullCompilationDto;
 import ru.practicum.compilation.service.CompilationService;
 
 import java.util.List;
@@ -21,16 +22,16 @@ public class PublicCompilationController {
     private final CompilationService compilationService;
 
     @GetMapping("/{compId}")
-    public CompilationDto getCompilationById(@PathVariable(name = "compId") long compId) throws NotFoundException {
+    public FullCompilationDto getCompilationById(@PathVariable(name = "compId") long compId) throws NotFoundException {
         return compilationService.getCompilationById(compId);
     }
 
     @GetMapping
-    public List<CompilationDto> getCompilations(@RequestParam(required = false) Boolean pinned,
+    public List<FullCompilationDto> getCompilations(@RequestParam(required = false) Boolean pinned,
                                                 @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
                                                 @RequestParam(defaultValue = "10") @Positive Integer size,
                                                 HttpServletResponse response) throws BadArgumentsException {
-        Page<CompilationDto> page = compilationService.getCompilations(pinned, from, size);
+        Page<FullCompilationDto> page = compilationService.getCompilations(pinned, from, size);
         response.setHeader("X-Total-Count", String.valueOf(page.getTotalElements()));
 
         return page.getContent();

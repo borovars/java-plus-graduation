@@ -13,5 +13,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
      * @param pageable параметры пагинации
      * @return страница комментариев
      */
-    Page<Comment> findAllByEventId(Long eventId, Pageable pageable);
+    Page<Comment> findAllByEvent(Long eventId, Pageable pageable);
 }

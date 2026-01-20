@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS compilations (
 CREATE TABLE IF NOT EXISTS compilation_events (
     compilation_id INTEGER NOT NULL,
     event_id INTEGER NOT NULL,
-    CONSTRAINT pk_compilation_events PRIMARY KEY (compilation_id, event_id),
+    CONSTRAINT pk_compilation_events PRIMARY KEY (compilation_id, event_id)
 );

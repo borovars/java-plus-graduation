@@ -7,6 +7,7 @@ import ru.practicum.common.exception.ConflictException;
 import ru.practicum.common.exception.NotFoundException;
 import ru.practicum.feign.event.dto.EventAdminUpdateDto;
 import ru.practicum.feign.event.dto.EventFullDto;
+import ru.practicum.feign.event.enums.States;
 
 import java.time.LocalDateTime;
 import java.util.List;

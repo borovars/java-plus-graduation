@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping
+@RequestMapping("/stats")
 public class StatsController {
 
     private final StatsService statsService;
@@ -26,7 +26,7 @@ public class StatsController {
         return statsService.createHit(hitRequestDto);
     }
 
-    @GetMapping("/stats")
+    @GetMapping
     public List<StatsDto> getStats(@RequestParam(name = "start", required = true)
                                    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                    LocalDateTime start,

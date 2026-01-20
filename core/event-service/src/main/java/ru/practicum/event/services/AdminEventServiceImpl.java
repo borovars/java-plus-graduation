@@ -21,6 +21,7 @@ import ru.practicum.feign.event.enums.StateActionsAdmin;
 import ru.practicum.feign.event.enums.States;
 import ru.practicum.event.services.interfaces.AdminEventService;
 import ru.practicum.feign.location.LocationFeignClient;
+import ru.practicum.feign.request.RequestFeignClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +33,7 @@ public class AdminEventServiceImpl implements AdminEventService {
 
     private final CategoryFeignClient categoryFeignClient;
     private final LocationFeignClient locationFeignClient;
+    private final RequestFeignClient requestFeignClient;
 
     private final EventRepository eventRepository;
 
@@ -76,6 +78,12 @@ public class AdminEventServiceImpl implements AdminEventService {
         int page = from / size;
         Page<Event> events = eventRepository.findAllByFiltersAdmin(users, states, categories, rangeStart, rangeEnd,
                 PageRequest.of(page, size));
+
+        events.forEach(e ->
+                e.setConfirmedRequests(
+                        requestFeignClient.findConfirmedRequests(e.getId())
+                )
+        );
 
         return events.map(EventMapper::mapToFullDto);
     }

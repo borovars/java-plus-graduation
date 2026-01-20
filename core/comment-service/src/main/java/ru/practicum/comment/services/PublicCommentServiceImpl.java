@@ -41,7 +41,7 @@ public class PublicCommentServiceImpl implements PublicCommentService {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdOn"));
 
-        Page<Comment> commentsPage = commentRepository.findAllByEventId(eventId, pageable);
+        Page<Comment> commentsPage = commentRepository.findAllByEvent(eventId, pageable);
         log.info("Найдено {} комментариев для события с id={}", commentsPage.getTotalElements(), eventId);
 
         return commentsPage.map(CommentMapper::mapToCommentFullDto);

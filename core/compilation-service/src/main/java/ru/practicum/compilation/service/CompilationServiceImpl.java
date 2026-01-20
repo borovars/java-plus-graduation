@@ -10,14 +10,17 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.common.exception.AlreadyExistsException;
 import ru.practicum.common.exception.BadArgumentsException;
 import ru.practicum.common.exception.NotFoundException;
-import ru.practicum.compilation.Compilation;
-import ru.practicum.compilation.CompilationMapper;
-import ru.practicum.compilation.CompilationRepository;
+import ru.practicum.compilation.*;
+import ru.practicum.compilation.compilation_event.CompilationEvent;
+import ru.practicum.compilation.compilation_event.CompilationEventRepository;
 import ru.practicum.compilation.dto.CompilationDto;
+import ru.practicum.compilation.dto.FullCompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
 import ru.practicum.compilation.dto.UpdateCompilationDto;
 import ru.practicum.feign.event.EventFeignClient;
+import ru.practicum.feign.event.dto.EventFullDto;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,10 +33,11 @@ public class CompilationServiceImpl implements CompilationService {
 
     private final CompilationRepository compilationRepository;
     private final EventFeignClient eventFeignClient;
+    private final CompilationEventRepository compilationEventRepository;
 
     @Override
     @Transactional
-    public CompilationDto addCompilation(NewCompilationDto dto) throws NotFoundException, AlreadyExistsException {
+    public FullCompilationDto addCompilation(NewCompilationDto dto) throws NotFoundException, AlreadyExistsException {
         log.info("Создание новой подборки: {}", dto.getTitle());
 
         Compilation compilation = CompilationMapper.toCompilation(dto);
@@ -42,29 +46,39 @@ public class CompilationServiceImpl implements CompilationService {
             throw new AlreadyExistsException("Подборка с таким именем уже существует");
         }
 
+        // Сохраняем саму подборку (без событий)
+        compilation = compilationRepository.save(compilation);
+
         // Добавлять события в подборку, если они указаны
         if (dto.getEvents() != null && !dto.getEvents().isEmpty()) {
-            // Получаем коллекцию событий по списку идентификаторов из DTO
+            // Проверяем существование событий через Feign
             Set<Long> foundIds = eventFeignClient.findAllById(dto.getEvents());
-
-            // Формируем список идентификаторов событий, которые были в DTO, но не найдены в БД
 
             List<Long> missedEventIds = dto.getEvents().stream()
                     .filter(id -> !foundIds.contains(id))
                     .toList();
 
-            // Если список не пустой
             if (!missedEventIds.isEmpty()) {
                 throw new NotFoundException("Events with ids=" + missedEventIds + " was not found");
             }
 
+            // Сохраняем связи в таблицу compilation_events
+            Compilation finalCompilation = compilation;
+            List<CompilationEvent> relations = foundIds.stream()
+                    .map(eventId -> CompilationEvent.of(finalCompilation.getId(), eventId))
+                    .collect(Collectors.toList());
+            compilationEventRepository.saveAll(relations);
+
+            // отобразим в transient поле для возврата DTO
             compilation.setEvents(new HashSet<>(foundIds));
+        } else {
+            compilation.setEvents(Collections.emptySet());
         }
 
-        compilation = compilationRepository.save(compilation);
         log.info("Подборка создана с id: {}", compilation.getId());
-
-        return CompilationMapper.toCompilationDto(compilation);
+        FullCompilationDto full = CompilationMapper.toFullCompilationDto(compilation);
+        full.setEvents(eventFeignClient.findAllByIdFull(compilation.getEvents().stream().toList()));
+        return full;
     }
 
     @Override
@@ -76,13 +90,17 @@ public class CompilationServiceImpl implements CompilationService {
             throw new NotFoundException("Compilation with id=" + compId + " was not found");
         }
 
+        // Сначала удаляем все связи
+        compilationEventRepository.deleteAllByIdCompilationId(compId);
+
+        // Затем удаляем саму подборку
         compilationRepository.deleteById(compId);
         log.info("Подборка с id {} удалена", compId);
     }
 
     @Override
     @Transactional
-    public CompilationDto updateCompilation(Long compId, UpdateCompilationDto dto) throws NotFoundException, AlreadyExistsException {
+    public FullCompilationDto updateCompilation(Long compId, UpdateCompilationDto dto) throws NotFoundException, AlreadyExistsException {
         log.info("Обновление подборки с id: {}", compId);
 
         Compilation compilation = compilationRepository.findById(compId)
@@ -90,7 +108,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         // Обновлять поля подборки, если они переданы
         if (dto.getTitle() != null) {
-            if (compilationRepository.existsByTitle(dto.getTitle())) {
+            if (!dto.getTitle().equals(compilation.getTitle()) && compilationRepository.existsByTitle(dto.getTitle())) {
                 throw new AlreadyExistsException("Подборка с таким именем уже существует");
             }
             compilation.setTitle(dto.getTitle());
@@ -101,34 +119,63 @@ public class CompilationServiceImpl implements CompilationService {
         }
 
         if (dto.getEvents() != null) {
-            Set<Long> events = new HashSet<>();
+            // проверяем все eventId, если хотя бы один не найден — бросаем исключение
+            Set<Long> validIds = new HashSet<>();
             for (Long eventId : dto.getEvents()) {
                 if (eventFeignClient.existsById(eventId)) {
-                    events.add(eventId);
+                    validIds.add(eventId);
                 } else {
                     throw new NotFoundException("Event with id=" + eventId + " was not found");
                 }
             }
-            compilation.setEvents(events);
+
+            // Удаляем старые связи
+            compilationEventRepository.deleteAllByIdCompilationId(compId);
+
+            // Вставляем новые связи
+            List<CompilationEvent> newRelations = validIds.stream()
+                    .map(eid -> CompilationEvent.of(compId, eid))
+                    .collect(Collectors.toList());
+            compilationEventRepository.saveAll(newRelations);
+
+            // отобразим в transient поле
+            compilation.setEvents(validIds);
+        } else {
+            // если events == null — не меняем связи; если требуется явно очистить, отправлять пустой список из клиента
         }
 
         compilation = compilationRepository.save(compilation);
         log.info("Подборка с id {} обновлена", compId);
+        FullCompilationDto full = CompilationMapper.toFullCompilationDto(compilation);
+        full.setEvents(eventFeignClient.findAllByIdFull(compilation.getEvents().stream().toList()));
 
-        return CompilationMapper.toCompilationDto(compilation);
+        return full;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public CompilationDto getCompilationById(Long compId) throws NotFoundException {
+    public FullCompilationDto getCompilationById(Long compId) throws NotFoundException {
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException("Подборка с id " + compId + " не найдена"));
-        return CompilationMapper.toCompilationDto(compilation);
+
+        // Получаем ids событий из таблицы связей
+        List<CompilationEvent> relations = compilationEventRepository.findAllByIdCompilationId(compId);
+        Set<Long> eventIds = relations.stream()
+                .map(CompilationEvent::getEventId)
+                .collect(Collectors.toSet());
+
+        // Запрашиваем полные DTO событий через feign (если нужно), иначе пустой набор
+        Set<EventFullDto> eventsFull = eventIds.isEmpty() ? Collections.emptySet() : eventFeignClient.findAllByIdFull(eventIds.stream().toList());
+
+        FullCompilationDto fullDto = CompilationMapper.toFullCompilationDto(compilation);
+        fullDto.setEvents(eventsFull);
+
+        return fullDto;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) throws
+    public Page<FullCompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) throws
             BadArgumentsException {
 
         if (from < 0 || size <= 0) {
@@ -143,6 +190,25 @@ public class CompilationServiceImpl implements CompilationService {
         } else {
             page = compilationRepository.findAll(pageable);
         }
-        return page.map(CompilationMapper::toCompilationDto);
+
+        Page<FullCompilationDto> dtoPage = page.map(comp -> {
+            List<CompilationEvent> relations =
+                    compilationEventRepository.findAllByIdCompilationId(comp.getId());
+
+            Set<Long> eventIds = relations.stream()
+                    .map(CompilationEvent::getEventId)
+                    .collect(Collectors.toSet());
+
+            comp.setEvents(eventIds);
+
+            FullCompilationDto full = CompilationMapper.toFullCompilationDto(comp);
+
+            full.setEvents(
+                    eventFeignClient.findAllByIdFull(eventIds.stream().toList())
+            );
+
+            return full;
+        });
+        return dtoPage;
     }
 }

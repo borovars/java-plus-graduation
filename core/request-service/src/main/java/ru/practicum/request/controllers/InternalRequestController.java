@@ -32,4 +32,9 @@ public class InternalRequestController implements InternalRequestContract {
             throws ConflictException, NotFoundException {
         return requestService.requestsChangeStatus(userId, eventId, dto);
     }
+
+    @Override
+    public int findConfirmedRequests(Long eventId) {
+        return requestService.getConfirmedRequest(eventId);
+    }
 }

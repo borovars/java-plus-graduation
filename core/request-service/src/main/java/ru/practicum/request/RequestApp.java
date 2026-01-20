@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
-@EnableFeignClients
+@EnableFeignClients(basePackages ={"ru.practicum.feign.user", "ru.practicum.feign.event"})
 @ConfigurationPropertiesScan
 public class RequestApp {
     public static void main(String[] args) {

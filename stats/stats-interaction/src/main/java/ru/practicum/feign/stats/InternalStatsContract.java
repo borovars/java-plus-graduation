@@ -17,7 +17,7 @@ public interface InternalStatsContract {
     @ResponseStatus(HttpStatus.CREATED)
     HitDto postHit(@RequestBody @Valid HitDto hitDto);
 
-    @GetMapping("/stats")
+    @GetMapping
     List<StatsDto> getStats(
             @RequestParam("start")
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

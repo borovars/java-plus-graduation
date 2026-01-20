@@ -28,7 +28,6 @@ import ru.practicum.feign.location.LocationFeignClient;
 import ru.practicum.feign.location.dto.LocationDto;
 import ru.practicum.feign.stats.StatsFeignClient;
 import ru.practicum.feign.user.UserFeignClient;
-import ru.practicum.feign.user.dto.UserDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -59,7 +58,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         int page = from / size;
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Direction.ASC, "id"));
 
-        Page<Event> searchResult = eventRepository.findAllByInitiatorId(userId, pageRequest);
+        Page<Event> searchResult = eventRepository.findAllByInitiator(userId, pageRequest);
         log.info("Из хранилища получена коллекция размером {}", searchResult.getTotalElements());
 
         List<Event> events = searchResult.getContent();
@@ -193,7 +192,6 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         log.info("Заполнение события");
 
         log.info("Заполнение количества одобренных заявок");
-        eventFullDto.setConfirmedRequests(event.getConfirmedRequests());
         log.info("Заполнение количества одобренных заявок завершено");
 
         log.info("Заполнение количества просмотров события");

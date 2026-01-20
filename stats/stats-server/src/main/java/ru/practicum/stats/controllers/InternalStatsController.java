@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/internal")
+@RequestMapping("/internal/stats")
 public class InternalStatsController implements InternalStatsContract {
 
     private final StatsService statsService;

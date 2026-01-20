@@ -1,5 +1,6 @@
 package ru.practicum.common.exception;
 
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -20,6 +21,19 @@ public class CommonExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponseDto handleConflict(final ConflictException e) {
+        log.warn("Вызвано исключение ConflictException с текстом {}", e.getMessage());
+
+        return ErrorResponseDto.builder()
+                .status(HttpStatus.CONFLICT.toString())
+                .reason("Integrity constraint has been violated.")
+                .message(e.getMessage())
+                .timestamp(LocalDateTime.now().format(DATE_TIME_FORMATTER))
+                .build();
+    }
+
+    @ExceptionHandler(FeignException.Conflict.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponseDto handleConflict(final FeignException.Conflict e) {
         log.warn("Вызвано исключение ConflictException с текстом {}", e.getMessage());
 
         return ErrorResponseDto.builder()

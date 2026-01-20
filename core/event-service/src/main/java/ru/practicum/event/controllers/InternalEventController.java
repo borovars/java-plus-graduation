@@ -3,6 +3,7 @@ package ru.practicum.event.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.common.exception.NotFoundException;
+import ru.practicum.event.EventMapper;
 import ru.practicum.feign.event.InternalEventContract;
 import ru.practicum.event.services.InternalEventService;
 import ru.practicum.feign.event.dto.EventFullDto;
@@ -35,5 +36,10 @@ public class InternalEventController implements InternalEventContract {
     @Override
     public EventFullDto findEventById(Long eventId) throws NotFoundException {
         return eventService.findEventById(eventId);
+    }
+
+    @Override
+    public Set<EventFullDto> findAllByIdFull(List<Long> eventsIds){
+        return eventService.findAllByIdFull(eventsIds);
     }
 }

@@ -13,6 +13,7 @@ import ru.practicum.common.exception.NotFoundException;
 import ru.practicum.feign.event.dto.EventAdminUpdateDto;
 import ru.practicum.feign.event.dto.EventFullDto;
 import ru.practicum.event.services.interfaces.AdminEventService;
+import ru.practicum.feign.event.enums.States;
 
 import java.time.LocalDateTime;
 import java.util.List;

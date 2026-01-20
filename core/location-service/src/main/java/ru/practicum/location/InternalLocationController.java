@@ -17,4 +17,9 @@ public class InternalLocationController implements InternalLocationContract {
     public Long save(LocationDto locationDto){
         return locationService.save(locationDto);
     }
+
+    @Override
+    public LocationDto get(Long locationId){
+        return locationService.get(locationId);
+    }
 }

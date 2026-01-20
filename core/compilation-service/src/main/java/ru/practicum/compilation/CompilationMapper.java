@@ -2,28 +2,37 @@ package ru.practicum.compilation;
 
 import lombok.experimental.UtilityClass;
 import ru.practicum.compilation.dto.CompilationDto;
+import ru.practicum.compilation.dto.FullCompilationDto;
 import ru.practicum.compilation.dto.NewCompilationDto;
 
-import java.util.Collections;
+import java.util.Set;
+
 
 @UtilityClass
 public class CompilationMapper {
 
-    public Compilation toCompilation(NewCompilationDto dto) {
+    public static Compilation toCompilation(NewCompilationDto dto) {
+        if (dto == null) return null;
         return Compilation.builder()
                 .title(dto.getTitle())
-                .pinned(dto.getPinned())
+                .pinned(dto.getPinned() != null ? dto.getPinned() : false)
                 .build();
     }
 
-    public CompilationDto toCompilationDto(Compilation compilation) {
-        return CompilationDto.builder()
-                .id(compilation.getId())
-                .title(compilation.getTitle())
-                .pinned(compilation.getPinned())
-                .events(compilation.getEvents() != null ?
-                        compilation.getEvents() :
-                        Collections.emptySet())
-                .build();
+    public static CompilationDto toCompilationDto(Compilation compilation) {
+        CompilationDto dto = new CompilationDto();
+        dto.setId(compilation.getId());
+        dto.setTitle(compilation.getTitle());
+        dto.setPinned(compilation.getPinned());
+        return dto;
+    }
+
+    public static FullCompilationDto toFullCompilationDto(Compilation compilation) {
+        if (compilation == null) return null;
+        FullCompilationDto dto = new FullCompilationDto();
+        dto.setId(compilation.getId());
+        dto.setTitle(compilation.getTitle());
+        dto.setPinned(compilation.getPinned());
+        return dto;
     }
 }

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Formula;
 import ru.practicum.feign.event.enums.States;
+import ru.practicum.feign.location.dto.LocationDto;
+
 import java.time.LocalDateTime;
 
 /**
@@ -104,7 +106,7 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private States state;
 
-    @Formula("(select count(*) from requests p " +
-            " where p.event_id = id and p.status = 'CONFIRMED')")
-    private Long confirmedRequests;
+    @Transient
+    private int confirmedRequests;
+
 }

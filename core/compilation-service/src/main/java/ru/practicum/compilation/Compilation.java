@@ -3,6 +3,7 @@ package ru.practicum.compilation;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -37,14 +38,6 @@ public class Compilation {
     @Column(name = "pinned")
     private Boolean pinned;
 
-    /**
-     * События входящие в подборку
-     */
-    @ManyToMany
-    @JoinTable(
-            name = "compilation_events",
-            joinColumns = @JoinColumn(name = "compilation_id"),
-            inverseJoinColumns = @JoinColumn(name = "event_id")
-    )
-    private Set<Long> events;
+    @Transient
+    private Set<Long> events = new HashSet<>();
 }

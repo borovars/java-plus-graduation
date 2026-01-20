@@ -9,6 +9,7 @@ import ru.practicum.event.EventMapper;
 import ru.practicum.event.EventRepository;
 import ru.practicum.feign.event.dto.EventFullDto;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,7 +22,7 @@ public class InternalEventService {
 
     public boolean existsByCategoryId(Long categoryId) {
         log.info("Запрос существования события с категорией {}", categoryId);
-        return eventRepository.existsByCategoryId(categoryId);
+        return eventRepository.existsByCategory(categoryId);
     }
 
     public Set<Long> findAllById(Set<Long> eventsIds) {
@@ -47,5 +48,9 @@ public class InternalEventService {
         return EventMapper.mapToFullDto(eventRepository.findById(eventId).orElseThrow(
                 () -> new NotFoundException("Event with id=" + eventId + " was not found")
         ));
+    }
+
+    public Set<EventFullDto> findAllByIdFull(List<Long> eventsIds){
+        return eventRepository.findAllById(eventsIds).stream().map(EventMapper::mapToFullDto).collect(Collectors.toSet());
     }
 }
