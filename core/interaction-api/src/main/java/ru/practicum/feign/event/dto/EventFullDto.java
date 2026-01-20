@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.feign.event.enums.States;
+import ru.practicum.feign.location.dto.LocationDto;
 
 @Data
 @AllArgsConstructor
@@ -19,7 +20,7 @@ public class EventFullDto {
     private String description;
     private String eventDate;
     private Long initiator;
-    private Long location;
+    private LocationDto location;
     private Boolean paid;
     private Integer participantLimit;
     private String publishedOn;

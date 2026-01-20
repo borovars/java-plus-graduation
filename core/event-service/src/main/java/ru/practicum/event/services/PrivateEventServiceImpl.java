@@ -89,6 +89,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
 
         Event event = EventMapper.mapToEvent(dto);
         event.setCategory(category.getId());
+        event.setInitiator(userId);
 
         if (dto.getLocation() != null) {
             LocationDto location = dto.getLocation();
@@ -96,22 +97,21 @@ public class PrivateEventServiceImpl implements PrivateEventService {
             event.setLocation(locationId);
         }
 
-        event.setInitiator(userId);
-        log.info("Несохраненная модель преобразована");
-
-        log.info("Валидация несохраненной модели");
         validateEvent(event);
-        log.info("Валидация несохраненной модели завершена");
 
         event = eventRepository.save(event);
-        log.info("Сохранение модели завершено. Получен идентификатор {}", event.getId());
+        log.info("Событие сохранено с ID {}", event.getId());
 
         EventFullDto result = EventMapper.mapToFullDto(event);
 
         completeModel(result, event);
-        log.info("Сохраненная модель преобразована. Идентификатор модели после преобразования {}", result.getId());
 
-        log.info("Возврат результатов создания пользователя на уровень контроллера");
+        if (event.getLocation() != null) {
+            LocationDto locationDto = locationFeignClient.get(event.getLocation());
+            result.setLocation(locationDto); // теперь объект с lat/lon
+        }
+
+        log.info("Создано полное событие с ID {}", result.getId());
         return result;
     }
 

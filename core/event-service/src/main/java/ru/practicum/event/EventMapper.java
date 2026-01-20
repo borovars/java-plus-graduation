@@ -46,7 +46,6 @@ public class EventMapper {
     }
 
     public EventFullDto mapToFullDto(Event event) {
-        log.info("Преобразование модели {} в полную модель {} для сохранения", Event.class, EventFullDto.class);
         return EventFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
@@ -55,7 +54,7 @@ public class EventMapper {
                 .description(event.getDescription())
                 .eventDate(event.getEventDate().format(DATE_TIME_FORMATTER))
                 .initiator(event.getInitiator())
-                .location(event.getLocation())
+                .location(null) // позже подставим объект LocationDto
                 .paid(event.getPaid())
                 .participantLimit(event.getParticipantLimit())
                 .publishedOn(event.getPublishedOn() != null ? event.getPublishedOn().format(DATE_TIME_FORMATTER) : null)
