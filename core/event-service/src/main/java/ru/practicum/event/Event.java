@@ -1,0 +1,112 @@
+package ru.practicum.event;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.Formula;
+import ru.practicum.feign.event.enums.States;
+import ru.practicum.feign.location.dto.LocationDto;
+
+import java.time.LocalDateTime;
+
+/**
+ * Событие.
+ */
+@Table(name = "events")
+@Entity
+@Builder
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+public class Event {
+
+    /**
+     * Идентификатор
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /**
+     * Краткое описание
+     */
+    @Column(name = "annotation")
+    private String annotation;
+
+    /**
+     * Категория
+     */
+    @Column(name = "category_id")
+    private Long category;
+
+    /**
+     * Полное описание
+     */
+    @Column(name = "description")
+    private String description;
+
+    /**
+     * Дата проведения
+     */
+    @Column(name = "event_date")
+    private LocalDateTime eventDate;
+
+    /**
+     * Место проведения
+     */
+    @Column(name = "location_id")
+    private Long location;
+
+    /**
+     * Признак оплаты
+     */
+    @Column(name = "paid")
+    private Boolean paid;
+
+    /**
+     * Максимальное количество участников
+     */
+    @Column(name = "participant_limit")
+    private Integer participantLimit;
+
+    /**
+     * Признак модерации заявок
+     */
+    @Column(name = "request_moderation")
+    private Boolean requestModeration;
+
+    /**
+     * Заголовок
+     */
+    @Column(name = "title")
+    private String title;
+
+    /**
+     * Дата создания
+     */
+    @Column(name = "created_on")
+    private LocalDateTime createdOn;
+
+    /**
+     * Дата публикации
+     */
+    @Column(name = "published_on")
+    private LocalDateTime publishedOn;
+
+    /**
+     * Инициатор
+     */
+    @Column(name = "initiator_id")
+    private Long initiator;
+
+    /**
+     * Состояние
+     */
+    @Enumerated(EnumType.STRING)
+    private States state;
+
+    @Transient
+    private int confirmedRequests;
+
+}

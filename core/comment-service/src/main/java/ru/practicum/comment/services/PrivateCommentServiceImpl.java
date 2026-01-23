@@ -1,0 +1,181 @@
+package ru.practicum.comment.services;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import ru.practicum.comment.Comment;
+import ru.practicum.comment.CommentMapper;
+import ru.practicum.comment.CommentRepository;
+import ru.practicum.comment.dto.CommentCreateOrUpdateDto;
+import ru.practicum.comment.dto.CommentFullDto;
+import ru.practicum.comment.services.interfaces.PrivateCommentService;
+import ru.practicum.common.exception.ConflictException;
+import ru.practicum.common.exception.NotFoundException;
+import ru.practicum.feign.event.EventFeignClient;
+import ru.practicum.feign.event.dto.EventFullDto;
+import ru.practicum.feign.event.enums.States;
+import ru.practicum.feign.user.UserFeignClient;
+
+import java.time.LocalDateTime;
+
+@RequiredArgsConstructor
+@Slf4j
+@Service
+public class PrivateCommentServiceImpl implements PrivateCommentService {
+
+    private final UserFeignClient userFeignClient;
+    private final EventFeignClient eventFeignClient;
+    private final CommentRepository commentRepository;
+
+    @Override
+    @Transactional
+    public CommentFullDto createComment(Long userId, Long eventId, CommentCreateOrUpdateDto dto) throws
+            NotFoundException,
+            ConflictException {
+        log.info("Создание комментария на уровне сервиса");
+
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
+        log.info("Передан идентификатор автора комментария: {}", userId);
+
+        if (!eventFeignClient.existsById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
+        log.info("Передан идентификатор комментируемого события: {}", eventId);
+
+        Comment comment = CommentMapper.mapToComment(dto);
+        comment.setAuthor(userId);
+        comment.setEvent(eventId);
+        comment.setCreatedOn(LocalDateTime.now());
+        log.info("Сохраняемая модель дополнена данными");
+
+        log.info("Валидация несохраненной модели");
+        validateComment(comment);
+        log.info("Валидация несохраненной модели завершена");
+
+        commentRepository.save(comment);
+        log.info("Сохранения завершено. Получен идентификатор {}", comment.getId());
+
+        CommentFullDto result = CommentMapper.mapToCommentFullDto(comment);
+        log.info("Сохраненная модель преобразована. Идентификатор модели после преобразования {}", result.getId());
+
+        log.info("Возврат результатов создания на уровень контроллера");
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public CommentFullDto updateComment(Long userId, Long eventId, Long commentId, CommentCreateOrUpdateDto dto) throws
+            NotFoundException,
+            ConflictException {
+        log.info("Обновление комментария на уровне сервиса");
+
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
+        log.info("Передан идентификатор автора обновляемого комментария: {}", userId);
+
+        if (!eventFeignClient.existsById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
+        log.info("Передан идентификатор события обновляемого комментария: {}", eventId);
+
+        // исправила - было eventId, стало commentId
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("Comment with id=" + commentId + " was not found"));
+        log.info("Передан идентификатор обновляемого комментария: {}", comment.getId());
+
+        // Добавляем проверку, что комментарий относится к указанному событию
+        if (!comment.getEvent().equals(eventId)) {
+            throw new ConflictException(
+                    "Field: event. Error: комментарий не относится к событию с id=" + eventId);
+        }
+
+        if (!comment.getAuthor().equals(userId)) {
+            throw new ConflictException("Field: author. Error: пользователь с id=" + userId
+                    + " не является автором комментария с id=" + comment.getId());
+        }
+
+        CommentMapper.updateFields(comment, dto);
+        log.info("Обновляемая модель пополнена данными");
+
+        log.info("Валидация обновляемой модели");
+        validateComment(comment);
+        log.info("Валидация обновляемой модели завершена");
+
+        commentRepository.save(comment);
+        log.info("Изменение завершено");
+
+        CommentFullDto result = CommentMapper.mapToCommentFullDto(comment);
+        log.info("Измененная модель преобразована. Идентификатор после преобразования {}", result.getId());
+
+        log.info("Возврат результатов изменения на уровень контроллера");
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public void deleteComment(Long userId, Long eventId, Long commentId) throws NotFoundException, ConflictException {
+        log.info("Удаление комментария на уровне сервиса");
+
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
+        log.info("Передан идентификатор автора удаляемого комментария: {}", userId);
+
+        if (!eventFeignClient.existsById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
+        log.info("Передан идентификатор события удаляемого комментария: {}", eventId);
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("Comment with id=" + commentId + " was not found"));
+        log.info("Передан идентификатор удаляемого комментария: {}", comment.getId());
+
+        if (!comment.getEvent().equals(eventId)) {
+            throw new ConflictException(
+                    "Field: event. Error: комментарий не относится к событию с id=" + eventId);
+        }
+
+        if (!comment.getAuthor().equals(userId)) {
+            throw new ConflictException("Field: author. Error: пользователь с id=" + userId
+                    + " не является автором комментария с id=" + comment.getId());
+        }
+
+        commentRepository.deleteById(comment.getId());
+        log.info("Удаление модели завершено");
+
+        log.info("Возврат результатов удаления на уровень контроллера");
+    }
+
+    /**
+     * Метод проверяет правильность заполнения полей комментария
+     *
+     * @param comment комментарий
+     * @throws ConflictException если нарушены ограничения возможности комментирования
+     */
+    private void validateComment(Comment comment) throws ConflictException, NotFoundException {
+        log.info("Валидация комментируемого события");
+        validateEvent(comment);
+        log.info("Валидация комментируемого события завершена");
+    }
+
+    /**
+     * Метод проверяет возможность комментирования события
+     *
+     * @param comment комментарий
+     * @throws ConflictException если нарушены ограничения возможности комментирования
+     */
+    private void validateEvent(Comment comment) throws ConflictException, NotFoundException {
+        EventFullDto event = eventFeignClient.findEventById(comment.getEvent());
+        if (!event.getState().equals(States.PUBLISHED)) {
+            throw new ConflictException(
+                    "Field: event. Error: комментируемое событие должно быть опубликовано. Value: " + event.getState());
+        }
+    }
+}

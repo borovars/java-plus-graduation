@@ -27,7 +27,3 @@ management:
       base-path: /actuator
       exposure:
         include: health
-
-stats:
-  client:
-    service-name: STATS-SERVER

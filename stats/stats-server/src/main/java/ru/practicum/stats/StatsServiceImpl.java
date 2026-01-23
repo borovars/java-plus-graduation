@@ -14,13 +14,11 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class StatsServiceImpl implements StatsService {
 
     private final StatsRepository statsRepository;
 
     @Override
-    @Transactional
     public HitDto createHit(HitDto requestDto) {
         log.debug("Сохраняем запрос hit: app={}, uri={}, ip={}, timestamp={}",
                 requestDto.getApp(), requestDto.getUri(),
@@ -31,6 +29,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<StatsDto> getStats(
             LocalDateTime start,
             LocalDateTime end,
