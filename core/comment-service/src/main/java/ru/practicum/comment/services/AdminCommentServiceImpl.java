@@ -26,7 +26,9 @@ public class AdminCommentServiceImpl implements AdminCommentService {
         log.info("Удаление комментария администратором: eventId={}, commentId={}", eventId, commentId);
 
         // Проверяем существование события
-        eventFeignClient.existsById(eventId);
+        if(!eventFeignClient.existsById(eventId)){
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
 
         // Проверяем существование комментария
         Comment comment = commentRepository.findById(commentId)
@@ -47,7 +49,9 @@ public class AdminCommentServiceImpl implements AdminCommentService {
         log.info("Получение комментария администратором: eventId={}, commentId={}", eventId, commentId);
 
         // Проверяем существование события
-        eventFeignClient.existsById(eventId);
+        if(!eventFeignClient.existsById(eventId)){
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
 
         // Проверяем существование комментария
         Comment comment = commentRepository.findById(commentId)

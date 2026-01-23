@@ -7,9 +7,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import ru.practicum.common.exception.AlreadyExistsException;
 import ru.practicum.common.exception.BadArgumentsException;
 import ru.practicum.common.exception.NotFoundException;
+import ru.practicum.common.exception.TransactionWrappedException;
 import ru.practicum.compilation.*;
 import ru.practicum.compilation.compilation_event.CompilationEvent;
 import ru.practicum.compilation.compilation_event.CompilationEventRepository;
@@ -34,6 +36,7 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventFeignClient eventFeignClient;
     private final CompilationEventRepository compilationEventRepository;
+    private final TransactionTemplate transactionTemplate;
 
     @Override
     @Transactional
@@ -103,53 +106,66 @@ public class CompilationServiceImpl implements CompilationService {
     public FullCompilationDto updateCompilation(Long compId, UpdateCompilationDto dto) throws NotFoundException, AlreadyExistsException {
         log.info("Обновление подборки с id: {}", compId);
 
-        Compilation compilation = compilationRepository.findById(compId)
-                .orElseThrow(() -> new NotFoundException("Compilation with id=" + compId + " was not found"));
-
-        // Обновлять поля подборки, если они переданы
-        if (dto.getTitle() != null) {
-            if (!dto.getTitle().equals(compilation.getTitle()) && compilationRepository.existsByTitle(dto.getTitle())) {
-                throw new AlreadyExistsException("Подборка с таким именем уже существует");
-            }
-            compilation.setTitle(dto.getTitle());
-        }
-
-        if (dto.getPinned() != null) {
-            compilation.setPinned(dto.getPinned());
-        }
+        Set<Long> validEventIds = null;
 
         if (dto.getEvents() != null) {
-            // проверяем все eventId, если хотя бы один не найден — бросаем исключение
-            Set<Long> validIds = new HashSet<>();
-            for (Long eventId : dto.getEvents()) {
-                if (eventFeignClient.existsById(eventId)) {
-                    validIds.add(eventId);
-                } else {
-                    throw new NotFoundException("Event with id=" + eventId + " was not found");
-                }
+            validEventIds = eventFeignClient.findAllById(dto.getEvents());
+
+            if (validEventIds.size() < dto.getEvents().size()) {
+                Set<Long> notValidIds = new HashSet<>(dto.getEvents());
+                notValidIds.removeAll(validEventIds);
+                throw new NotFoundException("Events with id= " + notValidIds + " was not found");
             }
-
-            // Удаляем старые связи
-            compilationEventRepository.deleteAllByIdCompilationId(compId);
-
-            // Вставляем новые связи
-            List<CompilationEvent> newRelations = validIds.stream()
-                    .map(eid -> CompilationEvent.of(compId, eid))
-                    .collect(Collectors.toList());
-            compilationEventRepository.saveAll(newRelations);
-
-            // отобразим в transient поле
-            compilation.setEvents(validIds);
-        } else {
-            // если events == null — не меняем связи; если требуется явно очистить, отправлять пустой список из клиента
         }
 
-        compilation = compilationRepository.save(compilation);
-        log.info("Подборка с id {} обновлена", compId);
-        FullCompilationDto full = CompilationMapper.toFullCompilationDto(compilation);
-        full.setEvents(eventFeignClient.findAllByIdFull(compilation.getEvents().stream().toList()));
+        Set<Long> finalValidEventIds = validEventIds;
 
-        return full;
+        try {
+            return transactionTemplate.execute(status -> {
+                try {
+                    Compilation compilation = compilationRepository.findById(compId)
+                            .orElseThrow(() ->
+                                    new NotFoundException("Compilation with id=" + compId + " was not found"));
+
+                    if (dto.getTitle() != null) {
+                        if (!dto.getTitle().equals(compilation.getTitle())
+                                && compilationRepository.existsByTitle(dto.getTitle())) {
+                            throw new AlreadyExistsException("Подборка с таким именем уже существует");
+                        }
+                        compilation.setTitle(dto.getTitle());
+                    }
+
+                    if (dto.getPinned() != null) {
+                        compilation.setPinned(dto.getPinned());
+                    }
+
+                    if (finalValidEventIds != null) {
+                        compilationEventRepository.deleteAllByIdCompilationId(compId);
+
+                        List<CompilationEvent> newRelations = finalValidEventIds.stream()
+                                .map(eid -> CompilationEvent.of(compId, eid))
+                                .collect(Collectors.toList());
+
+                        compilationEventRepository.saveAll(newRelations);
+                        compilation.setEvents(finalValidEventIds);
+                    }
+
+                    return CompilationMapper.toFullCompilationDto(compilation);
+
+                } catch (NotFoundException | AlreadyExistsException e) {
+                    throw new TransactionWrappedException(e);
+                }
+            });
+        } catch (TransactionWrappedException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof NotFoundException) {
+                throw (NotFoundException) cause;
+            }
+            if (cause instanceof AlreadyExistsException) {
+                throw (AlreadyExistsException) cause;
+            }
+            throw e;
+        }
     }
 
     @Override

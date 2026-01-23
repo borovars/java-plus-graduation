@@ -13,5 +13,5 @@ public interface InternalUserContract {
     UserDto findByUserId(@PathVariable(name = "userId") @NotNull @Positive Long userId) throws NotFoundException;
 
     @GetMapping("/exists/{userId}")
-    boolean existsById(@PathVariable(name = "userId") @NotNull @Positive Long userId) throws NotFoundException;
+    boolean existsById(@PathVariable(name = "userId") @NotNull @Positive Long userId);
 }

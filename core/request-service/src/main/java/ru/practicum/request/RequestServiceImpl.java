@@ -40,7 +40,11 @@ public class RequestServiceImpl implements RequestService {
         log.info("Запрос списка заявок пользователя с id: {}", userId);
         int page = from / size;
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"));
-        userFeignClient.existsById(userId);
+
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         Page<Request> requests = requestRepository.findAllByRequester(userId, pageRequest);
         log.info("Количество найденных заявок: {}", requests.getTotalElements());
         return requests.map(RequestMapper::toRequestGetDto);
@@ -50,7 +54,11 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     public RequestGetDto createRequest(long userId, long eventId) throws NotFoundException, ConflictException {
         log.info("Добавление запроса от текущего пользователя id {} на участие в событии id {}", userId, eventId);
-        userFeignClient.existsById(userId);
+
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         EventFullDto event = eventFeignClient.findEventById(eventId);
         validateForCreateRequest(userId, event);
         Integer participantLimit = event.getParticipantLimit();
@@ -72,7 +80,11 @@ public class RequestServiceImpl implements RequestService {
     @Transactional
     public RequestGetDto cancelRequest(long userId, long requestId) throws NotFoundException, ConflictException {
         log.info("Запрос на отмену своего запроса на участие в событии");
-        userFeignClient.existsById(userId);
+
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         Request request = requestRepository.findById(requestId).orElseThrow(() -> new NotFoundException("Request with id=" + requestId + " was not found"));
         if (!request.getRequester().equals(userId)) {
             throw new ConflictException("User with id " + userId + " is not requester of request with id " + requestId);
@@ -111,7 +123,11 @@ public class RequestServiceImpl implements RequestService {
     }
 
     private EventFullDto baseValidateEvent(Long userId, Long eventId) throws NotFoundException, ConflictException {
-        userFeignClient.existsById(userId);
+
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         EventFullDto event = eventFeignClient.findEventById(eventId);
         if (!event.getInitiator().equals(userId)) {
             throw new ConflictException("User with id " + userId + " is not initiator of event with id=" + event.getId());

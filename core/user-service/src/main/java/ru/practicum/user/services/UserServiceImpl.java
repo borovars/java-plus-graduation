@@ -122,14 +122,9 @@ public class UserServiceImpl implements UserService {
                 () -> new NotFoundException("Пользователь с id " + id + " не найден")));
     }
 
-    public boolean existsById(Long userId) throws NotFoundException {
+    public boolean existsById(Long userId) {
         log.info("Запрос существования пользователя с id {}", userId);
 
-        if (userRepository.existsById(userId)) {
-            return true;
-        }
-        else {
-            throw new NotFoundException("User with id=" + userId + " was not found");
-        }
+        return userRepository.existsById(userId);
     }
 }

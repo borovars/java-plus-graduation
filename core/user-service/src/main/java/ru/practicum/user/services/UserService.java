@@ -40,5 +40,5 @@ public interface UserService {
 
     UserDto findById(Long id) throws NotFoundException;
 
-    boolean existsById(Long userId) throws NotFoundException;
+    boolean existsById(Long userId);
 }

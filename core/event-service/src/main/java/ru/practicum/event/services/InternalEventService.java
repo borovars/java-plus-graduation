@@ -33,14 +33,10 @@ public class InternalEventService {
                 .collect(Collectors.toSet());
     }
 
-    public boolean existsById(Long eventId) throws NotFoundException {
+    public boolean existsById(Long eventId) {
         log.info("Запрос существования события с id {}", eventId);
 
-        if (eventRepository.existsById(eventId)) {
-            return true;
-        } else {
-            throw new NotFoundException("Event with id=" + eventId + " was not found");
-        }
+        return eventRepository.existsById(eventId);
     }
 
     public EventFullDto findEventById(Long eventId) throws NotFoundException {

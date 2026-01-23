@@ -31,14 +31,19 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
     @Override
     @Transactional
     public CommentFullDto createComment(Long userId, Long eventId, CommentCreateOrUpdateDto dto) throws
-                                                                                                 NotFoundException,
-                                                                                                 ConflictException {
+            NotFoundException,
+            ConflictException {
         log.info("Создание комментария на уровне сервиса");
 
-        userFeignClient.existsById(userId);
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         log.info("Передан идентификатор автора комментария: {}", userId);
 
-        eventFeignClient.existsById(eventId);
+        if (!eventFeignClient.existsById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
         log.info("Передан идентификатор комментируемого события: {}", eventId);
 
         Comment comment = CommentMapper.mapToComment(dto);
@@ -64,14 +69,19 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
     @Override
     @Transactional
     public CommentFullDto updateComment(Long userId, Long eventId, Long commentId, CommentCreateOrUpdateDto dto) throws
-                                                                                                                 NotFoundException,
-                                                                                                                 ConflictException {
+            NotFoundException,
+            ConflictException {
         log.info("Обновление комментария на уровне сервиса");
 
-        userFeignClient.existsById(userId);
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         log.info("Передан идентификатор автора обновляемого комментария: {}", userId);
 
-        eventFeignClient.existsById(eventId);
+        if (!eventFeignClient.existsById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
         log.info("Передан идентификатор события обновляемого комментария: {}", eventId);
 
         // исправила - было eventId, стало commentId
@@ -112,10 +122,15 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
     public void deleteComment(Long userId, Long eventId, Long commentId) throws NotFoundException, ConflictException {
         log.info("Удаление комментария на уровне сервиса");
 
-        userFeignClient.existsById(userId);
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         log.info("Передан идентификатор автора удаляемого комментария: {}", userId);
 
-        eventFeignClient.existsById(eventId);
+        if (!eventFeignClient.existsById(eventId)) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
         log.info("Передан идентификатор события удаляемого комментария: {}", eventId);
 
         Comment comment = commentRepository.findById(commentId)
@@ -158,7 +173,7 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
      */
     private void validateEvent(Comment comment) throws ConflictException, NotFoundException {
         EventFullDto event = eventFeignClient.findEventById(comment.getEvent());
-        if(!event.getState().equals(States.PUBLISHED)){
+        if (!event.getState().equals(States.PUBLISHED)) {
             throw new ConflictException(
                     "Field: event. Error: комментируемое событие должно быть опубликовано. Value: " + event.getState());
         }

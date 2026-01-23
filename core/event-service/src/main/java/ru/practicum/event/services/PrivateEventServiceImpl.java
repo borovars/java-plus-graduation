@@ -52,7 +52,10 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     public Page<EventShortDto> getEventsByUserId(long userId, int from, int size) throws NotFoundException {
         log.info("Запрос списка событий, созданных пользователем на уровне сервиса");
 
-        userFeignClient.existsById(userId);
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         log.info("Передан идентификатор инициатора событий: {}", userId);
 
         int page = from / size;
@@ -81,7 +84,10 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     public EventFullDto createEvent(long userId, EventCreateDto dto) throws NotFoundException, ConflictException {
         log.info("Создание события на уровне сервиса");
 
-        userFeignClient.existsById(userId);
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         log.info("Передан идентификатор инициатора: {}", userId);
 
         CategoryDto category = categoryFeignClient.findCategoryById(dto.getCategory());
@@ -120,7 +126,10 @@ public class PrivateEventServiceImpl implements PrivateEventService {
             ConflictException {
         log.info("Поиск полной информации о событии на уровне сервиса");
 
-        userFeignClient.existsById(userId);
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         log.info("Передан идентификатор инициатора события: {}", userId);
 
         Event event = eventRepository.findById(eventId)
@@ -146,7 +155,10 @@ public class PrivateEventServiceImpl implements PrivateEventService {
             ConflictException {
         log.info("Обновление события на уровне сервиса");
 
-        userFeignClient.existsById(userId);
+        if (!userFeignClient.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         log.info("Передан идентификатор пользователя: {}", userId);
 
         Event event = eventRepository.findById(eventId)

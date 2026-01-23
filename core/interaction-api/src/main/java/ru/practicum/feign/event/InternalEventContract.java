@@ -20,7 +20,7 @@ public interface InternalEventContract {
     Set<Long> findAllById(@RequestParam Set<Long> eventsIds);
 
     @GetMapping("/exists/{eventId}")
-    boolean existsById(@PathVariable(name = "eventId") @NotNull @Positive Long eventId) throws NotFoundException;
+    boolean existsById(@PathVariable(name = "eventId") @NotNull @Positive Long eventId);
 
     @GetMapping("/{eventId}")
     EventFullDto findEventById(@PathVariable(name = "eventId") @NotNull @Positive  Long eventId) throws NotFoundException;

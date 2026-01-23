@@ -29,7 +29,7 @@ public class InternalEventController implements InternalEventContract {
     }
 
     @Override
-    public boolean existsById(Long eventId) throws NotFoundException {
+    public boolean existsById(Long eventId) {
         return eventService.existsById(eventId);
     }
 
