@@ -1,15 +1,16 @@
-package ru.practicum;
+package ru.practicum.collector;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+@EnableDiscoveryClient
+@SpringBootApplication
 
 @ConfigurationPropertiesScan
-@SpringBootApplication
-@EnableFeignClients
-public class StatsServer {
+public class CollectorApp {
     public static void main(String[] args) {
-        SpringApplication.run(StatsServer.class, args);
+        SpringApplication.run(CollectorApp.class, args);
     }
 }

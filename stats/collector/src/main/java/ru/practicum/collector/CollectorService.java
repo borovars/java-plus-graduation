@@ -14,7 +14,7 @@ import ru.yandex.practicum.ewm.stats.avro.UserActionAvro;
 public class CollectorService {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final KafkaProducer kafkaProducer;
+    private final CollectorProducer collectorProducer;
     private final CollectorMapper mapper;
 
     @Value("${kafka.topics.user-action-topic}")
