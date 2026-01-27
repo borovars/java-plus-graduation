@@ -16,7 +16,8 @@
         <module>stats</module>
 		<module>infra</module>
         <module>stats</module>
-	</modules>
+        <module>stats/stats-client</module>
+    </modules>
 
     <groupId>ru.practicum</groupId>
 	<artifactId>explore-with-me</artifactId>
@@ -40,6 +41,7 @@
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
 		<lombok-mapstruct.version>0.2.0</lombok-mapstruct.version>
 		<spring-boot.version>3.2.5</spring-boot.version>
+		<spring-boot-maven-plugin.version>3.3.2</spring-boot-maven-plugin.version>
 	</properties>
 
 	<dependencyManagement>
@@ -84,6 +86,12 @@
 			</dependency>
 
 			<dependency>
+				<groupId>net.devh</groupId>
+				<artifactId>grpc-client-spring-boot-starter</artifactId>
+				<version>${grpc-spring-boot-starter.version}</version>
+			</dependency>
+
+			<dependency>
 				<groupId>io.grpc</groupId>
 				<artifactId>grpc-stub</artifactId>
 				<version>${grpc.version}</version>
@@ -101,6 +109,11 @@
 				<version>${mapstruct.version}</version>
 			</dependency>
 
+			<dependency>
+				<groupId>org.mapstruct</groupId>
+				<artifactId>mapstruct-processor</artifactId>
+				<version>${mapstruct.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
