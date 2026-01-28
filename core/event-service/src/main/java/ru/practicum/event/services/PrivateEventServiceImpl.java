@@ -198,10 +198,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     private void completeModel(EventFullDto eventFullDto, Event event) {
         log.info("Заполнение события");
 
-        log.info("Заполнение количества одобренных заявок");
-        log.info("Заполнение количества одобренных заявок завершено");
-
-        log.info("Заполнение количества просмотров события");
+        log.info("Заполнение рейтинга события");
 
         eventFullDto.setRating(analyzerClient.getInteractionsCount(List.of(event.getId()))
                 .map(RecommendedEventProto::getScore)

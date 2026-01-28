@@ -15,6 +15,7 @@ server:
 grpc:
   server:
     port: 0
+    enable-reflection: true
 
 eureka:
   client:
@@ -31,4 +32,4 @@ eureka:
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
     metadata-map:
-      startup: ${random.int}
+      grpc.port: ${grpc.server.port}
