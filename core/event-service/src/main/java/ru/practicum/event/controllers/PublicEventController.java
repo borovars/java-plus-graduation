@@ -59,7 +59,17 @@ public class PublicEventController {
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventFullDto getEventById(@PathVariable @Positive Long eventId,
-                                     HttpServletRequest request) throws NotFoundException, BadRequestException {
-        return publicEventService.getEventById(eventId, request);
+                                     HttpServletRequest request, @RequestHeader("X-EWM-USER-ID") Long userId) throws NotFoundException, BadRequestException {
+        return publicEventService.getEventById(eventId, request, userId);
+    }
+
+    @GetMapping("/recommendations")
+    public List<EventShortDto> getRecommendation(@RequestParam Long max, @RequestHeader("X-EWM-USER-ID") Long userId) {
+        return publicEventService.getRecommendations(max, userId);
+    }
+
+    @PutMapping("/{eventId}/like")
+    public void likeEvent(@PathVariable Long eventId, @RequestHeader("X-EWM-USER-ID") Long userId) throws NotFoundException {
+        publicEventService.addLike(eventId, userId);
     }
 }

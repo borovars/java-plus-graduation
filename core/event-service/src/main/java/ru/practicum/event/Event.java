@@ -109,4 +109,7 @@ public class Event {
     @Transient
     private int confirmedRequests;
 
+    @Transient
+    private Double rating;
+
 }

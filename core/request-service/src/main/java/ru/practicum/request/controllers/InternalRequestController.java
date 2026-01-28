@@ -37,4 +37,9 @@ public class InternalRequestController implements InternalRequestContract {
     public int findConfirmedRequests(Long eventId) {
         return requestService.getConfirmedRequest(eventId);
     }
+
+    @Override
+    public Boolean checkRegistration(Long eventId, Long userId){
+        return requestService.checkRegistration(eventId, userId);
+    }
 }

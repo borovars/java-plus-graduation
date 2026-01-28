@@ -1,13 +1,14 @@
 package ru.practicum.event.services.interfaces;
 
 
-import org.springframework.data.domain.Page;
 import ru.practicum.common.exception.ConflictException;
 import ru.practicum.common.exception.NotFoundException;
 import ru.practicum.feign.event.dto.EventCreateDto;
 import ru.practicum.feign.event.dto.EventFullDto;
 import ru.practicum.feign.event.dto.EventShortDto;
 import ru.practicum.feign.event.dto.EventUpdateDto;
+
+import java.util.List;
 
 public interface PrivateEventService {
 
@@ -18,7 +19,7 @@ public interface PrivateEventService {
      * @param from   номер начального элемента
      * @param size   максимальный размер коллекции
      */
-    Page<EventShortDto> getEventsByUserId(long userId, int from, int size) throws NotFoundException;
+    List<EventShortDto> getEventsByUserId(long userId, int from, int size) throws NotFoundException;
 
     /**
      * Метод получает несохранённый экземпляр класса {@link EventCreateDto}, проверяет его, передает для сохранения и

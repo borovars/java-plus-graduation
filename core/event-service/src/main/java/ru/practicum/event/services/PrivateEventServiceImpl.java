@@ -11,10 +11,10 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import ru.practicum.common.exception.ConflictException;
 import ru.practicum.common.exception.NotFoundException;
-import ru.practicum.dto.StatsDto;
 import ru.practicum.event.Event;
 import ru.practicum.event.EventMapper;
 import ru.practicum.event.EventRepository;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 import ru.practicum.feign.category.CategoryFeignClient;
 import ru.practicum.feign.category.dto.CategoryDto;
 import ru.practicum.feign.event.dto.EventCreateDto;
@@ -26,8 +26,8 @@ import ru.practicum.feign.event.enums.States;
 import ru.practicum.event.services.interfaces.PrivateEventService;
 import ru.practicum.feign.location.LocationFeignClient;
 import ru.practicum.feign.location.dto.LocationDto;
-import ru.practicum.feign.stats.StatsFeignClient;
 import ru.practicum.feign.user.UserFeignClient;
+import ru.practicum.stats.AnalyzerClient;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -44,12 +44,11 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     private final UserFeignClient userFeignClient;
     private final CategoryFeignClient categoryFeignClient;
     private final LocationFeignClient locationFeignClient;
-    private final StatsFeignClient statsFeignClient;
-
+    private final AnalyzerClient analyzerClient;
     private final EventRepository eventRepository;
 
     @Override
-    public Page<EventShortDto> getEventsByUserId(long userId, int from, int size) throws NotFoundException {
+    public List<EventShortDto> getEventsByUserId(long userId, int from, int size) throws NotFoundException {
         log.info("Запрос списка событий, созданных пользователем на уровне сервиса");
 
         if (!userFeignClient.existsById(userId)) {
@@ -64,19 +63,15 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         Page<Event> searchResult = eventRepository.findAllByInitiator(userId, pageRequest);
         log.info("Из хранилища получена коллекция размером {}", searchResult.getTotalElements());
 
-        List<Event> events = searchResult.getContent();
-
-        Map<Long, Long> views = getAmountOfViews(events);
-
-        List<EventShortDto> dtoList = events.stream()
-                .map(EventMapper::mapToEventShortDto)
-                .peek(eventShortDto -> eventShortDto.setViews(views.getOrDefault(eventShortDto.getId(), 0L)))
-                .collect(Collectors.toList());
-
-        log.info("Полученная коллекция преобразована. Размер коллекции после преобразования {}", dtoList.size());
-
-        log.info("Возврат результатов поиска на уровень контроллера");
-        return new PageImpl<>(dtoList, pageRequest, searchResult.getTotalElements());
+        return searchResult.getContent().stream()
+                        .map(event -> {
+                            EventShortDto eventShortDto = EventMapper.mapToEventShortDto(event);
+                            eventShortDto.setRating(analyzerClient.getInteractionsCount(List.of(event.getId()))
+                                    .map(RecommendedEventProto::getScore)
+                                    .findFirst()
+                                    .orElse(0.0));
+                            return eventShortDto;
+                        }).toList();
     }
 
     @Override
@@ -114,7 +109,7 @@ public class PrivateEventServiceImpl implements PrivateEventService {
 
         if (event.getLocation() != null) {
             LocationDto locationDto = locationFeignClient.get(event.getLocation());
-            result.setLocation(locationDto); // теперь объект с lat/lon
+            result.setLocation(locationDto);
         }
 
         log.info("Создано полное событие с ID {}", result.getId());
@@ -207,8 +202,12 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         log.info("Заполнение количества одобренных заявок завершено");
 
         log.info("Заполнение количества просмотров события");
-        Map<Long, Long> views = getAmountOfViews(List.of(event));
-        eventFullDto.setViews(views.getOrDefault(event.getId(), 0L));
+
+        eventFullDto.setRating(analyzerClient.getInteractionsCount(List.of(event.getId()))
+                .map(RecommendedEventProto::getScore)
+                .findFirst()
+                .orElse(0.0));
+
         log.info("Заполнение количества просмотров события завершено");
 
         log.info("Заполнение события завершено");
@@ -249,47 +248,5 @@ public class PrivateEventServiceImpl implements PrivateEventService {
                 event.setState(States.CANCELED);
             }
         }
-    }
-
-    private Map<Long, Long> getAmountOfViews(List<Event> events) {
-        if (events == null || events.isEmpty()) {
-            return Collections.emptyMap();
-        }
-
-        List<String> uris = events.stream()
-                .map(event -> "/events/" + event.getId())
-                .distinct()
-                .collect(Collectors.toList());
-
-        LocalDateTime startTime = events.stream()
-                .map(Event::getCreatedOn)
-                .filter(Objects::nonNull)
-                .min(LocalDateTime::compareTo)
-                .orElse(LocalDateTime.now().minusYears(1));
-        LocalDateTime endTime = LocalDateTime.now();
-
-        Map<Long, Long> viewsMap = new HashMap<>();
-        try {
-            log.info("Получение статистики по времени для URI: {} c {} по {}", uris, startTime, endTime);
-
-            log.debug("Вызов StatsClient.getStats c параметрами {},{},{},{}", startTime, endTime, uris, true);
-            List<StatsDto> stats = statsFeignClient.getStats(startTime, endTime, uris, true);
-            log.debug("StatsClient вернул {}", stats);
-            if (stats == null || stats.isEmpty()) {
-                log.info("Сервис статистики вернул пустой список");
-                return Collections.emptyMap();
-            }
-
-            for (StatsDto s : stats) {
-                String uri = s.getUri();
-                Long hits = s.getHits() != null ? s.getHits() : 0L;
-                Long eventId = Long.parseLong(uri.substring("/events/".length()));
-
-                viewsMap.put(eventId, hits);
-            }
-        } catch (Exception e) {
-            log.debug("Ошибка при получении статистики просмотров");
-        }
-        return viewsMap;
     }
 }

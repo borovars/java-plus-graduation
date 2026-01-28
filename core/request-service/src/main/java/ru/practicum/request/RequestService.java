@@ -27,4 +27,6 @@ public interface RequestService {
             throws ConflictException, NotFoundException;
 
     int getConfirmedRequest(Long eventId);
+
+    Boolean checkRegistration(Long eventId, Long userId);
 }

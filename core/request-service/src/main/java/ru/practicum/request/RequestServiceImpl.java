@@ -20,6 +20,7 @@ import ru.practicum.feign.user.UserFeignClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -190,5 +191,12 @@ public class RequestServiceImpl implements RequestService {
 
     public int getConfirmedRequest(Long eventId) {
         return requestRepository.countByEventAndStatus(eventId, CONFIRMED);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean checkRegistration(Long eventId, Long userId){
+        Optional<Request> request = requestRepository.findByEventAndRequester(eventId, userId);
+        return request.isPresent();
     }
 }

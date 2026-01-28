@@ -3,6 +3,7 @@ package ru.practicum.collector;
 
 import com.google.protobuf.Timestamp;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import ru.practicum.ewm.stats.proto.ActionTypeProto;
 import ru.practicum.ewm.stats.proto.UserActionProto;
 import ru.yandex.practicum.ewm.stats.avro.ActionTypeAvro;
@@ -13,6 +14,8 @@ import java.time.Instant;
 @Mapper(componentModel = "spring")
 public interface CollectorMapper {
 
+    @Mapping(source = "type", target = "actionType")
+    @Mapping(source = "timestamp", target = "timestamp")
     UserActionAvro mapToAvro(UserActionProto action);
 
     default ActionTypeAvro mapActionType(ActionTypeProto actionType) {
@@ -27,7 +30,13 @@ public interface CollectorMapper {
         };
     }
 
-    default Instant mapTimestamp(Timestamp timestamp) {
-        return Instant.ofEpochSecond(timestamp.getSeconds(), timestamp.getNanos());
+    default Instant map(Timestamp timestamp) {
+        if (timestamp == null) {
+            return null;
+        }
+        return Instant.ofEpochSecond(
+                timestamp.getSeconds(),
+                timestamp.getNanos()
+        );
     }
 }

@@ -13,6 +13,7 @@ import ru.practicum.common.exception.NotFoundException;
 import ru.practicum.event.Event;
 import ru.practicum.event.EventMapper;
 import ru.practicum.event.EventRepository;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 import ru.practicum.feign.category.CategoryFeignClient;
 import ru.practicum.feign.category.dto.CategoryDto;
 import ru.practicum.feign.event.dto.EventAdminUpdateDto;
@@ -22,6 +23,7 @@ import ru.practicum.feign.event.enums.States;
 import ru.practicum.event.services.interfaces.AdminEventService;
 import ru.practicum.feign.location.LocationFeignClient;
 import ru.practicum.feign.request.RequestFeignClient;
+import ru.practicum.stats.AnalyzerClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,6 +36,7 @@ public class AdminEventServiceImpl implements AdminEventService {
     private final CategoryFeignClient categoryFeignClient;
     private final LocationFeignClient locationFeignClient;
     private final RequestFeignClient requestFeignClient;
+    private final AnalyzerClient analyzerClient;
 
     private final EventRepository eventRepository;
 
@@ -59,6 +62,11 @@ public class AdminEventServiceImpl implements AdminEventService {
 
         log.info("Событие обновлено, state: {}", event.getState());
 
+        event.setRating(analyzerClient.getInteractionsCount(List.of(event.getId()))
+                .map(RecommendedEventProto::getScore)
+                .findFirst()
+                .orElse(0.0));
+
         return EventMapper.mapToFullDto(event);
     }
 
@@ -79,10 +87,14 @@ public class AdminEventServiceImpl implements AdminEventService {
         Page<Event> events = eventRepository.findAllByFiltersAdmin(users, states, categories, rangeStart, rangeEnd,
                 PageRequest.of(page, size));
 
-        events.forEach(e ->
-                e.setConfirmedRequests(
-                        requestFeignClient.findConfirmedRequests(e.getId())
-                )
+        events.forEach(e -> {
+                    e.setConfirmedRequests(requestFeignClient.findConfirmedRequests(e.getId()));
+                    e.setRating(analyzerClient.getInteractionsCount(List.of(e.getId()))
+                            .map(RecommendedEventProto::getScore)
+                            .findFirst()
+                            .orElse(0.0));
+                }
+
         );
 
         return events.map(EventMapper::mapToFullDto);

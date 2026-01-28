@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.feign.request.enums.RequestStatus;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RequestRepository extends JpaRepository<Request, Long> {
@@ -20,4 +21,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findByIdInAndEvent(List<Long> requestIds, Long eventId);
 
     int countByEventAndStatus(Long eventId, RequestStatus status);
+
+    Optional<Request> findByEventAndRequester(Long eventId, Long requester);
 }

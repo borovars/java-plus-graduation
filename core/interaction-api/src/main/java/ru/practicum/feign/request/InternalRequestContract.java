@@ -25,4 +25,7 @@ public interface InternalRequestContract {
 
     @GetMapping("/confirmed/{eventId}")
     int findConfirmedRequests(@PathVariable(name = "eventId") @Positive Long eventId);
+
+    @GetMapping("/confirmed/{eventId}/{userId}")
+    Boolean checkRegistration(@PathVariable Long eventId, @PathVariable Long userId);
 }
