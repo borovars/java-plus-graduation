@@ -69,10 +69,7 @@ public class PublicEventService {
             throw new NotFoundException("Событие с id " + eventId + " недоступно, так как не опубликовано");
         }
 
-        collectorClient.collectUserAction(userId, eventId, "ACTION_VIEW", Instant.now());
-
-        EventFullDto eventFullDto = EventMapper.mapToFullDto(event);
-        return eventFullDto;
+        return EventMapper.mapToFullDto(event);
     }
 
     @Transactional(readOnly = true)
