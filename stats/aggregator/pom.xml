@@ -99,7 +99,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>ru.yandex.practicum.aggregator.AggregatorApp</mainClass>
+                    <mainClass>ru.practicum.aggregator.AggregatorApp</mainClass>
                 </configuration>
                 <executions>
                     <execution>

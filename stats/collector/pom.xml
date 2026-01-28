@@ -104,7 +104,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>ru.yandex.practicum.collector.CollectorApp</mainClass>
+                    <mainClass>ru.practicum.collector.CollectorApp</mainClass>
                 </configuration>
                 <executions>
                     <execution>
