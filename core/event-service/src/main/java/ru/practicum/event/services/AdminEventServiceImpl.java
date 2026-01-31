@@ -24,9 +24,13 @@ import ru.practicum.event.services.interfaces.AdminEventService;
 import ru.practicum.feign.location.LocationFeignClient;
 import ru.practicum.feign.request.RequestFeignClient;
 import ru.practicum.stats.AnalyzerClient;
+import ru.practicum.stats.CollectorClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -87,15 +91,24 @@ public class AdminEventServiceImpl implements AdminEventService {
         Page<Event> events = eventRepository.findAllByFiltersAdmin(users, states, categories, rangeStart, rangeEnd,
                 PageRequest.of(page, size));
 
-        events.forEach(e -> {
-                    e.setConfirmedRequests(requestFeignClient.findConfirmedRequests(e.getId()));
-                    e.setRating(analyzerClient.getInteractionsCount(List.of(e.getId()))
-                            .map(RecommendedEventProto::getScore)
-                            .findFirst()
-                            .orElse(0.0));
-                }
+        List<Long> ids = events.stream()
+                .map(Event::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
 
-        );
+        Map<Long, Integer> confirmedMap = requestFeignClient.findListOfConfirmedRequests(ids);
+
+        Map<Long, Double> ratingMap = analyzerClient.getInteractionsCount(ids)
+                .collect(Collectors.toMap(
+                        RecommendedEventProto::getEventId,
+                        RecommendedEventProto::getScore
+                ));
+
+        events.forEach(event -> {
+            event.setConfirmedRequests(confirmedMap.getOrDefault(event.getId(), 0));
+            event.setRating(ratingMap.getOrDefault(event.getId(), 0.0));
+        });
 
         return events.map(EventMapper::mapToFullDto);
     }

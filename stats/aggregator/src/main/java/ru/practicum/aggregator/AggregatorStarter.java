@@ -3,18 +3,13 @@ package ru.practicum.aggregator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import ru.practicum.aggregator.kafka.AggregatorConsumer;
-import ru.practicum.aggregator.kafka.AggregatorProducer;
+import ru.yandex.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.yandex.practicum.ewm.stats.avro.UserActionAvro;
 
-import java.time.Duration;
 import java.util.List;
 
 @Slf4j
@@ -23,52 +18,30 @@ import java.util.List;
 public class AggregatorStarter {
 
     private final AggregatorService service;
-    private final AggregatorConsumer consumerFactory;
-    private final AggregatorProducer producerFactory;
-
-    @Value("${kafka.topics.user-action-topic}")
-    private String USER_ACTION_TOPIC;
+    private final KafkaTemplate<String, SpecificRecordBase> kafkaTemplate;
 
     @Value("${kafka.topics.similarity-topic}")
-    private String SIMILARITY_TOPIC;
+    private String similarityTopic;
 
-    public void start() {
-        KafkaConsumer<String, SpecificRecordBase> consumer = consumerFactory.createConsumer();
-        KafkaProducer<String, SpecificRecordBase> producer = producerFactory.createProducer();
-
+    @KafkaListener(
+            topics = "${kafka.topics.user-action-topic}",
+            containerFactory = "kafkaListenerContainerFactory"
+    )
+    public void onMessage(UserActionAvro request) {
         try {
-            log.info("подписывается на топик действий");
-            consumer.subscribe(List.of(USER_ACTION_TOPIC));
+            log.debug("Получено событие UserAction: {}", request);
 
-            while (true) {
-                ConsumerRecords<String, SpecificRecordBase> records = consumer.poll(Duration.ofSeconds(1));
+            List<EventSimilarityAvro> similarities =
+                    service.calculateSimilarity(request);
 
-                records.forEach(record -> {
-                    try {
-                        UserActionAvro request = (UserActionAvro) record.value();
-                        service.calculateSimilarity(request).forEach(result -> {
-                            producer.send(new ProducerRecord<>(SIMILARITY_TOPIC, result));
-                        });
-                    } catch (Exception e) {
-                        log.error("Ошибка обработки записи", e);
+            similarities.forEach(similarity -> {
+                        kafkaTemplate.send(similarityTopic, similarity);
+                        log.debug("Aggregator отправил в топик {} сообщение: {}", similarityTopic, similarity.toString());
                     }
-                });
-                consumer.commitSync();
-            }
-        } catch (WakeupException e) {
-            log.error("Ошибка WakeupException", e);
+            );
+
         } catch (Exception e) {
-            log.error("Ошибка во время обработки", e);
-        } finally {
-            try {
-                producer.flush();
-                consumer.commitSync();
-            } finally {
-                log.info("Закрываем консьюмер");
-                consumer.close();
-                log.info("Закрываем продюсер");
-                producer.close();
-            }
+            log.error("Ошибка обработки UserAction", e);
         }
     }
 }

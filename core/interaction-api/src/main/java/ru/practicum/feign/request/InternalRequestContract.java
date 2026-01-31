@@ -10,6 +10,7 @@ import ru.practicum.feign.request.dto.RequestsChangeStatusRequestDto;
 import ru.practicum.feign.request.dto.RequestsChangeStatusResponseDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface InternalRequestContract {
 
@@ -25,6 +26,9 @@ public interface InternalRequestContract {
 
     @GetMapping("/confirmed/{eventId}")
     int findConfirmedRequests(@PathVariable(name = "eventId") @Positive Long eventId);
+
+    @PostMapping("/confirmed/events")
+    Map<Long, Integer> findListOfConfirmedRequests(@RequestParam List<Long> eventsIds);
 
     @GetMapping("/confirmed/{eventId}/{userId}")
     Boolean checkRegistration(@PathVariable Long eventId, @PathVariable Long userId);

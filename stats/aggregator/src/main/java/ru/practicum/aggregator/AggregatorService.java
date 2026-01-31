@@ -41,6 +41,7 @@ public class AggregatorService {
             case LIKE -> 1.0;
             default -> 0.0;
         };
+        //Здесь enum генерируется Avro, поэтому ему нельзя задать поле, а лишний enum-обертку создавать не очень хочется
     }
 
     private List<EventSimilarityAvro> updateEventWeight(Long eventId, Long userId, Double newWeight){
