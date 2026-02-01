@@ -19,8 +19,7 @@ import ru.practicum.feign.request.enums.RequestStatus;
 import ru.practicum.feign.user.UserFeignClient;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ru.practicum.feign.request.enums.RequestStatus.CONFIRMED;
@@ -190,5 +189,24 @@ public class RequestServiceImpl implements RequestService {
 
     public int getConfirmedRequest(Long eventId) {
         return requestRepository.countByEventAndStatus(eventId, CONFIRMED);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean checkRegistration(Long eventId, Long userId){
+        Optional<Request> request = requestRepository.findByEventAndRequester(eventId, userId);
+        return request.isPresent();
+    }
+
+    @Override
+    public Map<Long, Integer> findListOfConfirmedRequests(List<Long> eventsIds){
+        if (eventsIds == null || eventsIds.isEmpty()) return Collections.emptyMap();
+
+        List<Object[]> rows = requestRepository.countConfirmedByEventIds(eventsIds, RequestStatus.CONFIRMED);
+        return rows.stream()
+                .collect(Collectors.toMap(
+                        r -> (Long) r[0],
+                        r -> ((Long) r[1]).intValue()
+                ));
     }
 }

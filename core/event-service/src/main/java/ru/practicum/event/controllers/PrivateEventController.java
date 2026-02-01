@@ -19,6 +19,7 @@ import ru.practicum.feign.request.dto.RequestsChangeStatusRequestDto;
 import ru.practicum.feign.request.dto.RequestsChangeStatusResponseDto;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Закрытый API для работы с событиями
@@ -47,10 +48,10 @@ public class PrivateEventController {
                                                        HttpServletResponse response) throws
             NotFoundException {
 
-        Page<EventShortDto> page = privateEventService.getEventsByUserId(userId, from, size);
-        response.setHeader("X-Total-Count", String.valueOf(page.getTotalElements()));
+        List<EventShortDto> page = privateEventService.getEventsByUserId(userId, from, size);
+        response.setHeader("X-Total-Count", String.valueOf(page.size()));
 
-        return page.getContent();
+        return page;
     }
 
 

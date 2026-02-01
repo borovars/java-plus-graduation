@@ -8,6 +8,7 @@ import ru.practicum.feign.request.dto.RequestsChangeStatusRequestDto;
 import ru.practicum.feign.request.dto.RequestsChangeStatusResponseDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface RequestService {
 
@@ -27,4 +28,8 @@ public interface RequestService {
             throws ConflictException, NotFoundException;
 
     int getConfirmedRequest(Long eventId);
+
+    Boolean checkRegistration(Long eventId, Long userId);
+
+    Map<Long, Integer> findListOfConfirmedRequests(List<Long> eventsIds);
 }

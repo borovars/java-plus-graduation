@@ -12,6 +12,7 @@ import ru.practicum.feign.request.dto.RequestsChangeStatusResponseDto;
 import ru.practicum.request.RequestService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/internal/request")
@@ -36,5 +37,15 @@ public class InternalRequestController implements InternalRequestContract {
     @Override
     public int findConfirmedRequests(Long eventId) {
         return requestService.getConfirmedRequest(eventId);
+    }
+
+    @Override
+    public Boolean checkRegistration(Long eventId, Long userId) {
+        return requestService.checkRegistration(eventId, userId);
+    }
+
+    @Override
+    public Map<Long, Integer> findListOfConfirmedRequests(List<Long> eventsIds) {
+        return requestService.findListOfConfirmedRequests(eventsIds);
     }
 }
